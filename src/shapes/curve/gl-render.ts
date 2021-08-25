@@ -51,6 +51,7 @@ export function initDrawingCurveImage(
     const picVertices = new Float32Array(shapeVertices);
     updatePicVertices(tl, tr, bl, picVertices, xCount, yCount, flip);
     return (angle: number) => {
+      console.time('draw gl')
       updateCurveVertices(
         pa,
         pb,
@@ -64,6 +65,7 @@ export function initDrawingCurveImage(
         widthHeightRatio
       );
       drawingFn?.(shapeVertices, picVertices);
+      console.timeEnd('draw gl')
     };
   };
 }

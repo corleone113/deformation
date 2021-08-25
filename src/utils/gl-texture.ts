@@ -19,7 +19,10 @@ void main() {
 }
 `;
 
-export function initTextureRenderer(cvs: HTMLCanvasElement, image: TexImageSource) {
+export function initTextureRenderer(
+  cvs: HTMLCanvasElement,
+  image: TexImageSource
+) {
   const gl = getWebGLContext(cvs);
   if (!gl) {
     console.log('Failed to get the rendering context for WebGL');
@@ -61,6 +64,7 @@ export function initTextureRenderer(cvs: HTMLCanvasElement, image: TexImageSourc
       console.log('Failed to set the positions of the vertices');
       return;
     }
+    gl.clear(gl.COLOR_BUFFER_BIT);
     gl.drawArrays(gl.TRIANGLES, 0, n); // Draw the rectangle
   };
 }

@@ -1,11 +1,14 @@
 import { render } from 'react-dom';
-import App1 from './examples/App1';
-import {CurvePicture} from './examples/canvas-curve-picture'
+// import { CurvePicture } from './examples/canvas-curve-picture';
+// import { CurveText } from './examples/canvas-curve-text';
+// import { GLCurvePicture } from './examples/gl-curve-picture';
+import './examples/demo'
 
 render(
   <>
-    <App1 />
-    <CurvePicture />
+    {/* <CurvePicture /> */}
+    {/* <CurveText /> */}
+    {/* <GLCurvePicture /> */}
   </>,
   document.getElementById('app')
 );
