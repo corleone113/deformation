@@ -1,15 +1,9 @@
-import { Point2D } from '@/deformation/utils';
-import { initDrawingCurveImage } from '@/deformation/gl-utils';
+import { computeTextRect, Point2D, genTextPicture } from './utils';
+import { initDrawingCurveText } from './gl-utils';
 
-let xCount = '200',
+let xCount = '205',
   yCount = '200',
-  angle = '100',
-  newWidth: number,
-  newHeight: number,
-  pa: Point2D,
-  pb: Point2D,
-  pc: Point2D,
-  pd: Point2D;
+  angle = '100';
 const labelXCount = document.createElement('label');
 labelXCount.textContent = ' xCount:';
 const xCountText = document.createElement('input');
@@ -66,23 +60,24 @@ document.body.append(
   angleSlider,
   document.createElement('br')
 );
-const img = new Image();
+const ctx = (cvs.cloneNode() as HTMLCanvasElement).getContext(
+  '2d'
+) as CanvasRenderingContext2D;
+ctx.font = '48px serif';
+ctx.textBaseline = 'top';
+ctx.fillStyle = 'indianred';
+const text = '点击编辑文字';
+const drawPoint: Point2D = { x: 300, y: 450 };
+const hiddenCtx = document
+  .createElement('canvas')
+  .getContext('2d') as CanvasRenderingContext2D;
+const textRect = computeTextRect(ctx, text, drawPoint.x, drawPoint.y);
+const textPicture = genTextPicture(hiddenCtx, ctx, text, textRect);
 let genDrawing: (xCount: number, yCount?: number) => (angle: number) => void;
 let drawingFn: (angle: number) => void;
-img.src = '/assets/hailang.jpg';
-img.onload = () => {
-  const { width, height } = img;
-  newWidth = 350;
-  newHeight = (height * newWidth) / width;
-  img.width = newWidth;
-  img.height = newHeight;
-  (pa = { x: 300, y: 100 }),
-    (pb = { x: pa.x + newWidth, y: pa.y }),
-    (pc = { x: pa.x + newWidth, y: pa.y + newHeight }),
-    (pd = { x: pa.x, y: pa.y + newHeight });
-  genDrawing = initDrawingCurveImage(cvs, pa, pb, pc, pd, img);
+async function drawText() {
+  genDrawing = initDrawingCurveText(cvs, await textPicture, textRect, true);
   drawingFn = genDrawing(+xCount, +yCount);
-  console.time('first draw');
   drawingFn(+angle);
-  console.timeEnd('first draw');
-};
+}
+drawText();

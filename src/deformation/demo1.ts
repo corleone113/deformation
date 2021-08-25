@@ -1,15 +1,13 @@
-import { Point2D } from '@/deformation/utils';
-import { initDrawingCurveImage } from '@/deformation/gl-utils';
-
-let xCount = '200',
-  yCount = '200',
-  angle = '100',
-  newWidth: number,
-  newHeight: number,
-  pa: Point2D,
-  pb: Point2D,
-  pc: Point2D,
-  pd: Point2D;
+import {
+    computeTextRect,
+    drawCurveText,
+    genTextPicture,
+    Point2D,
+  } from './utils';
+  
+  let xCount = '25',
+  yCount = '10',
+  angle = '100';
 const labelXCount = document.createElement('label');
 labelXCount.textContent = ' xCount:';
 const xCountText = document.createElement('input');
@@ -18,8 +16,7 @@ xCountText.value = xCount;
 xCountText.addEventListener('input', (ev) => {
   xCount = (ev.target as HTMLInputElement).value;
   requestAnimationFrame(() => {
-    drawingFn = genDrawing(+xCount, +yCount);
-    drawingFn(+angle);
+    drawText()
   });
 });
 
@@ -31,8 +28,7 @@ yCountText.value = yCount;
 yCountText.addEventListener('input', (ev) => {
   yCount = (ev.target as HTMLInputElement).value;
   requestAnimationFrame(() => {
-    drawingFn = genDrawing(+xCount, +yCount);
-    drawingFn(+angle);
+    drawText()
   });
 });
 const angleText = document.createElement('label');
@@ -47,7 +43,7 @@ angleSlider.addEventListener('input', (ev) => {
   angle = (ev.target as HTMLInputElement).value;
   angleText.textContent = ' angle: ' + angle + '°';
   requestAnimationFrame(() => {
-    drawingFn(+angle);
+    drawText()
   });
 });
 const cvs = document.createElement('canvas');
@@ -66,23 +62,19 @@ document.body.append(
   angleSlider,
   document.createElement('br')
 );
-const img = new Image();
-let genDrawing: (xCount: number, yCount?: number) => (angle: number) => void;
-let drawingFn: (angle: number) => void;
-img.src = '/assets/hailang.jpg';
-img.onload = () => {
-  const { width, height } = img;
-  newWidth = 350;
-  newHeight = (height * newWidth) / width;
-  img.width = newWidth;
-  img.height = newHeight;
-  (pa = { x: 300, y: 100 }),
-    (pb = { x: pa.x + newWidth, y: pa.y }),
-    (pc = { x: pa.x + newWidth, y: pa.y + newHeight }),
-    (pd = { x: pa.x, y: pa.y + newHeight });
-  genDrawing = initDrawingCurveImage(cvs, pa, pb, pc, pd, img);
-  drawingFn = genDrawing(+xCount, +yCount);
-  console.time('first draw');
-  drawingFn(+angle);
-  console.timeEnd('first draw');
-};
+  const ctx = cvs.getContext('2d') as CanvasRenderingContext2D;
+  ctx.font = '48px serif';
+  ctx.textBaseline = 'top';
+  ctx.fillStyle = 'indianred';
+  const text = '点击编辑文字';
+  const drawPoint: Point2D = { x: 300, y: 450 };
+  const hiddenCtx = document
+    .createElement('canvas')
+    .getContext('2d') as CanvasRenderingContext2D;
+  const textRect = computeTextRect(ctx, text, drawPoint.x, drawPoint.y);
+  const textPicture = genTextPicture(hiddenCtx, ctx, text, textRect);
+  async function drawText() {
+    drawCurveText(ctx, +angle, +xCount, +yCount, await textPicture, textRect);
+  }
+  drawText();
+  

@@ -22,7 +22,7 @@ type StaticDrawingParams = [
 export const GLCurvePicture: FC = memo(() => {
   const [xCount, setXCount] = useState(200);
   const [yCount, setYCount] = useState(200);
-  const [angle, setAngle] = useState(100);
+  const [angle, setAngle] = useState(150);
   const cvsRef = useRef<null | HTMLCanvasElement>(null);
   const [staticParams, setStaticParams] = useState<null | StaticDrawingParams>(
     null
@@ -60,7 +60,7 @@ export const GLCurvePicture: FC = memo(() => {
       const imgHeight = (height * imgWidth) / width;
       img.width = imgWidth;
       img.height = imgHeight;
-      const pa = { x: 300, y: 100 };
+      const pa = { x: 300, y: 150 };
       const pb = { x: pa.x + imgWidth, y: pa.y };
       const pc = { x: pa.x + imgWidth, y: pa.y + imgHeight };
       const pd = { x: pa.x, y: pa.y + imgHeight };
@@ -99,8 +99,8 @@ export const GLCurvePicture: FC = memo(() => {
         type="range"
         value={angle}
         step={1}
-        min={-100}
-        max={100}
+        min={-150}
+        max={150}
         onInput={handleAngleChange}
       />
       <br />

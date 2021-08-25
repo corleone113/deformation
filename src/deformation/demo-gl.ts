@@ -1,9 +1,9 @@
-import { Point2D } from '@/deformation/utils';
-import { initDrawingCurveImage } from '@/deformation/gl-utils';
+import { Point2D } from './utils';
+import { initDrawingCurveImage } from './gl-utils';
 
 let xCount = '200',
   yCount = '200',
-  angle = '100',
+  angle = '180',
   newWidth: number,
   newHeight: number,
   pa: Point2D,
@@ -24,7 +24,7 @@ xCountText.addEventListener('input', (ev) => {
 });
 
 const labelYCount = document.createElement('label');
-labelYCount.textContent = ' yCount:';
+labelYCount.textContent = ' >>yCount:';
 const yCountText = document.createElement('input');
 yCountText.type = 'number';
 yCountText.value = yCount;
@@ -41,8 +41,8 @@ const angleSlider = document.createElement('input');
 angleSlider.value = angle;
 angleSlider.type = 'range';
 angleSlider.step = '1';
-angleSlider.min = '-100';
-angleSlider.max = '100';
+angleSlider.min = '-180';
+angleSlider.max = '180';
 angleSlider.addEventListener('input', (ev) => {
   angle = (ev.target as HTMLInputElement).value;
   angleText.textContent = ' angle: ' + angle + '°';
@@ -69,7 +69,7 @@ document.body.append(
 const img = new Image();
 let genDrawing: (xCount: number, yCount?: number) => (angle: number) => void;
 let drawingFn: (angle: number) => void;
-img.src = '/assets/hailang.jpg';
+img.src = 'src/deformation/hailang.jpg';
 img.onload = () => {
   const { width, height } = img;
   newWidth = 350;
