@@ -1,9 +1,9 @@
-import { Point2D } from '@/deformation/utils';
-import { initDrawingCurveImage } from '@/deformation/gl-utils';
+import { Point2D } from '@/shapes/curve/canvas-compute';
+import { initDrawingCurveImage } from '@/shapes/curve/gl-render';
 
 let xCount = '200',
   yCount = '200',
-  angle = '100',
+  angle = '150',
   newWidth: number,
   newHeight: number,
   pa: Point2D,
@@ -41,8 +41,8 @@ const angleSlider = document.createElement('input');
 angleSlider.value = angle;
 angleSlider.type = 'range';
 angleSlider.step = '1';
-angleSlider.min = '-100';
-angleSlider.max = '100';
+angleSlider.min = '-150';
+angleSlider.max = '150';
 angleSlider.addEventListener('input', (ev) => {
   angle = (ev.target as HTMLInputElement).value;
   angleText.textContent = ' angle: ' + angle + '°';
@@ -76,7 +76,7 @@ img.onload = () => {
   newHeight = (height * newWidth) / width;
   img.width = newWidth;
   img.height = newHeight;
-  (pa = { x: 300, y: 100 }),
+  (pa = { x: 300, y: 150 }),
     (pb = { x: pa.x + newWidth, y: pa.y }),
     (pc = { x: pa.x + newWidth, y: pa.y + newHeight }),
     (pd = { x: pa.x, y: pa.y + newHeight });

@@ -197,7 +197,7 @@ export function computeTransformMatrix(
 
   //获得a、c、e
   const { x: a, y: c, z: e } = solveEquation3(equation1, equation2, equation3);
-  // const [a, c, e] = solveEquation(equation1, equation2, equation3);
+  // const [a, c, e] = solveEquation3(equation1, equation2, equation3);
 
   //传入y值解第二个方程 即  Y = bx + dy + f 求 bdf
   equation1[3] = cp1.y;
@@ -206,7 +206,7 @@ export function computeTransformMatrix(
 
   //获得b、d、f
   const { x: b, y: d, z: f } = solveEquation3(equation1, equation2, equation3);
-  // const [b, d, f] = solveEquation(equation1, equation2, equation3);
+  // const [b, d, f] = solveEquation3(equation1, equation2, equation3);
 
   return {
     a,

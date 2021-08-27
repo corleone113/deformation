@@ -68,6 +68,7 @@ export function drawCurveImage(
   const curvePoints = computeCurvePoints(pa, pb, pc, pd, angle, xCount, yCount);
 
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  console.time('canvas draw')
   curvePoints.forEach((p, i) => {
     //获取平行四边形的四个点
     const p1 = curvePoints[i];
@@ -121,6 +122,7 @@ export function drawCurveImage(
       ctx.fillRect(p.x - 1, p.y - 1, 2, 2);
     }
   });
+  console.timeEnd('canvas draw')
 }
 
 function renderClipImage(
