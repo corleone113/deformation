@@ -14,17 +14,6 @@ export const WebGLDebugUtils = (function () {
       window.console.log(msg);
     }
   };
-  type FunctionKeys<T> = {
-    [P in keyof T]: T[P] extends Function ? P : never;
-  }[keyof T];
-  type DebugContextProp = { [x: number]: boolean };
-  type WebGLContextFuncKey = FunctionKeys<WebGLRenderingContext>;
-  type GLValidEnumContext = {
-    [prop in WebGLContextFuncKey]?: DebugContextProp;
-  };
-  type GLPartialContext = {
-    -readonly [prop in keyof WebGLRenderingContext]?: WebGLRenderingContext[prop];
-  };
 
   /**
    * Which arguements are enums.
@@ -348,14 +337,7 @@ export const WebGLDebugUtils = (function () {
     // TODO: This should NOT be needed but Firefox fails with 'hint'
     while (ctx.getError());
   }
-  type WebGLResource = (
-    | WebGLBuffer
-    | WebGLFramebuffer
-    | WebGLProgram
-    | WebGLRenderbuffer
-    | WebGLShader
-    | WebGLTexture
-  ) & { __webglDebugContextLostId__: number };
+ 
   function makeLostContextSimulatingContext(ctx: WebGLRenderingContext) {
     const wrapper_: GLPartialContext & {
       loseContext?: Function;

@@ -1,6 +1,5 @@
-import { Point2D } from '@/shapes/curve/canvas-compute';
 import { drawCurveText } from '@/shapes/curve/canvas-render';
-import { computeTextRect, genTextPicture, TextRect } from '@/utils/canvas-text';
+import { computeTextRect, genTextPicture } from '@/utils/canvas-text';
 import {
   FC,
   useState,

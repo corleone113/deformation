@@ -1,4 +1,3 @@
-import { Point2D } from '@/shapes/curve/canvas-compute';
 import { initDrawingCurveImage } from '@/shapes/curve/gl-render';
 import {
   FC,
@@ -53,14 +52,14 @@ export const GLCurvePicture: FC = memo(() => {
   useEffect(() => {
     const cvs = cvsRef.current as HTMLCanvasElement;
     const img = new Image();
-    img.src = '/assets/hailang.jpg';
+    img.src = '/assets/pic.jpg';
     img.onload = () => {
       const { width, height } = img;
       const imgWidth = 350;
       const imgHeight = (height * imgWidth) / width;
       img.width = imgWidth;
       img.height = imgHeight;
-      const pa = { x: 300, y: 150 };
+      const pa = { x: 300, y: 160 };
       const pb = { x: pa.x + imgWidth, y: pa.y };
       const pc = { x: pa.x + imgWidth, y: pa.y + imgHeight };
       const pd = { x: pa.x, y: pa.y + imgHeight };
@@ -74,7 +73,7 @@ export const GLCurvePicture: FC = memo(() => {
   }, [drawingFn, angle]);
   return (
     <>
-      <p>WebGL版图片变形3</p>
+      <p>WebGL版图片变形</p>
       <canvas width={1000} height={600} ref={cvsRef}></canvas>
       <br />
       <label htmlFor="xCount"> xCount: </label>

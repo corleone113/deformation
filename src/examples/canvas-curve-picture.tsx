@@ -1,4 +1,3 @@
-import { Point2D } from '@/shapes/curve/canvas-compute';
 import { drawCurveImage } from '@/shapes/curve/canvas-render';
 import {
   FC,
@@ -24,7 +23,7 @@ export const CurvePicture: FC = memo(() => {
   const [hasPic, setHasPic] = useState(true);
   const [xCount, setXCount] = useState(50);
   const [yCount, setYCount] = useState(50);
-  const [angle, setAngle] = useState(100);
+  const [angle, setAngle] = useState(150);
   const cvsRef = useRef<null | HTMLCanvasElement>(null);
   const [staticParams, setStaticParams] = useState<null | StaticDrawingParams>(
     null
@@ -53,14 +52,14 @@ export const CurvePicture: FC = memo(() => {
       '2d'
     ) as CanvasRenderingContext2D;
     const img = new Image();
-    img.src = '/assets/hailang.jpg';
+    img.src = '/assets/pic.jpg';
     img.onload = () => {
       const { width, height } = img;
       const imgWidth = 350;
       const imgHeight = (height * imgWidth) / width;
       img.width = imgWidth;
       img.height = imgHeight;
-      const pa = { x: 300, y: 100 };
+      const pa = { x: 300, y: 200 };
       const pb = { x: pa.x + imgWidth, y: pa.y };
       const pc = { x: pa.x + imgWidth, y: pa.y + imgHeight };
       const pd = { x: pa.x, y: pa.y + imgHeight };
@@ -139,8 +138,8 @@ export const CurvePicture: FC = memo(() => {
         type="range"
         value={angle}
         step={1}
-        min={-100}
-        max={100}
+        min={-150}
+        max={150}
         onInput={handleAngleChange}
       />
       <br />

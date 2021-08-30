@@ -3,6 +3,29 @@ export function angleToRadian(a: number) {
   return (a / 180) * PI;
 }
 
+export function solveEquation3(
+  equation1: number[],
+  equation2: number[],
+  equation3: number[]
+) {
+  const [a1, b1, c1, d1] = equation1;
+  const [a2, b2, c2, d2] = equation2;
+  const [a3, b3, c3, d3] = equation3;
+
+  const A1 = a1 - (b1 * a2) / b2;
+  const C1 = c1 - (b1 * c2) / b2;
+  const D1 = d1 - (b1 * d2) / b2;
+  const A2 = a2 - (b2 * a3) / b3;
+  const C2 = c2 - (b2 * c3) / b3;
+  const D2 = d2 - (b2 * d3) / b3;
+
+  const x = ((C1 / C2) * D2 - D1) / ((C1 / C2) * A2 - A1);
+  const z = (D2 - A2 * x) / C2;
+  const y = (d1 - a1 * x - c1 * z) / b1;
+
+  return [x, y, z];
+}
+
 /**
  *
  * @param equation1 第一个三元方程系数及已知值构成的数组
@@ -10,7 +33,7 @@ export function angleToRadian(a: number) {
  * @param equation3 第三个三元方程系数及已知值构成的数组
  * @returns 解构成的对象
  */
-export function solveEquation3(
+ export function solveEquation3_1(
   equation1: number[],
   equation2: number[],
   equation3: number[]
@@ -36,34 +59,6 @@ export function solveEquation3(
   };
 }
 
-export function solveEquation31(
-  equation1: number[],
-  equation2: number[],
-  equation3: number[]
-) {
-  const [a1, b1, c1, d1] = equation1;
-  const [a2, b2, c2, d2] = equation2;
-  const [a3, b3, c3, d3] = equation3;
-
-  // 消元后得到的4个系数及两个已知值
-  const A1 = a1 - (b1 * a2) / b2;
-  const C1 = c1 - (b1 * c2) / b2;
-  const D1 = d1 - (b1 * d2) / b2;
-  const A2 = a2 - (b2 * a3) / b3;
-  const C2 = c2 - (b2 * c3) / b3;
-  const D2 = d2 - (b2 * d3) / b3;
-
-  //计算xyz
-  const x = ((C1 / C2) * D2 - D1) / ((C1 / C2) * A2 - A1);
-  const z = (D2 - A2 * x) / C2;
-  const y = (d1 - a1 * x - c1 * z) / b1;
-
-  return {
-    x,
-    y,
-    z,
-  };
-}
 
 /**
  * 求解四元一次方程组(保留此函数是为了方便理解下面的解多元一次方程组的函数代码)
@@ -84,11 +79,11 @@ export function solveEquation4(
   const eq11 = elimination(eq1, eq2);
   const eq12 = elimination(eq2, eq3);
   const eq13 = elimination(eq3, eq4);
-  const [a1, c1, d1, e1] = eq11;
+  const [a1, c1, d1, e1] = getValidEq(eq11, eq12, eq13);
   // 消掉三元一次方程组中第二系数得到二元一次方程组
   const eq21 = elimination(eq11, eq12);
   const eq22 = elimination(eq12, eq13);
-  const [a2, d2, e2] = eq21;
+  const [a2, d2, e2] = getValidEq(eq21, eq22);
 
   // 消掉二元一次方程组中第二系数得到一元一次方程
   const [a3, e3] = elimination(eq21, eq22);

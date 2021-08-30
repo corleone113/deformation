@@ -1,19 +1,9 @@
 import { solveEquation3 } from '@/utils/math';
 
-export interface Point2D {
-  x: number;
-  y: number;
-}
-
-interface ShapePaths {
-  upPath: Point2D[];
-  downPath: Point2D[];
-}
-
 const { hypot } = Math;
 
 /**
- * 判断是否能够计算并绘制裁剪的内容
+ * 判断是否能够计算并绘制裁剪区域
  * @param points 顶点数组
  * @param i 顶点索引
  * @param stepCount 分段数量
@@ -23,12 +13,11 @@ export function canDrawClip(points: Point2D[], i: number, stepCount: number) {
   return points[i + stepCount + 2] && i % (stepCount + 1) < stepCount;
 }
 
-/**
- *
- * @param pa 矩形的顶点A
- * @param pb 矩形的顶点B
- * @param pc 矩形的顶点C
- * @param pd 矩形的顶点D
+/** 计算矩形裁剪区域的的顶点路径
+ * @param pa 矩形的左上顶点
+ * @param pb 矩形的右上顶点
+ * @param pc 矩形的右下顶点
+ * @param pd 矩形的左下顶点
  * @param i 矩形的索引
  * @param stepCount 分段数量
  * @param curvePoints 变形后的所有矩形的顶点数组
@@ -48,7 +37,7 @@ export function computeClipShapePaths(
   let pdTo = null;
   let paTo = null;
 
-  // 右下部分多边形的顶点数组
+  // 右下部分多边形的顶点路径数组
   const downPath = [
     pc,
     pb,
@@ -107,7 +96,7 @@ export function computeClipShapePaths(
  * 计算迂回点
  * @param from 向量起点
  * @param to 向量终点
- * @returns 迂回点
+ * @returns 迂回点坐标
  */
 function computeDetourPoint(from: Point2D, to: Point2D): Point2D {
   const { x: fx, y: fy } = from;
@@ -122,13 +111,14 @@ function computeDetourPoint(from: Point2D, to: Point2D): Point2D {
 }
 
 /**
- * 将 abcd 四边形分割成 n 的 n 次方份，获取 n 等分后的所有点坐标
- * @param xCount     多少等分
- * @param pa     a 点坐标
- * @param pb     b 点坐标
- * @param pc     c 点坐标
- * @param pd     d 点坐标
- * @returns {Array}
+ * 将 abcd 四边形分割成 xCount * yCount 个四边形，获取所有顶点
+ * @param pa 矩形的左上顶点
+ * @param pb 矩形的右上顶点
+ * @param pc 矩形的右下顶点
+ * @param pd 矩形的左下顶点
+ * @param xCount 水平方向分段数量
+ * @param yCount 垂直方向分段数量
+ * @returns 返回所有顶点的数组
  */
 export function computeOriginalPoints(
   pa: Point2D,
@@ -145,7 +135,7 @@ export function computeOriginalPoints(
   const bc_x = (pc.x - pb.x) / yCount;
   const bc_y = (pc.y - pb.y) / yCount;
 
-  const originalPoints = [];
+  const points = [];
 
   //左边点递增，右边点递增，获取每一次递增后的新的向量，继续 n 等分，从而获取所有点坐标
   for (let i = 0; i <= yCount; ++i) {
@@ -161,14 +151,14 @@ export function computeOriginalPoints(
       let ab_x = (x2 - x1) / xCount;
       let ab_y = (y2 - y1) / xCount;
 
-      originalPoints.push({
+      points.push({
         x: x1 + ab_x * j,
         y: y1 + ab_y * j,
       });
     }
   }
 
-  return originalPoints;
+  return points;
 }
 
 /**
@@ -188,7 +178,7 @@ export function computeTransformMatrix(
   cp2: Point2D,
   p3: Point2D,
   cp3: Point2D
-) {
+): TransformMatrix2D {
   //传入x值解第一个方程 即  X = ax + cy + e 求ace
   //传入的四个参数，对应三元一次方程：ax+by+cz=d的四个参数：a、b、c、d，跟矩阵方程对比c为1
   const equation1 = [p1.x, p1.y, 1, cp1.x];
@@ -196,8 +186,7 @@ export function computeTransformMatrix(
   const equation3 = [p3.x, p3.y, 1, cp3.x];
 
   //获得a、c、e
-  const { x: a, y: c, z: e } = solveEquation3(equation1, equation2, equation3);
-  // const [a, c, e] = solveEquation3(equation1, equation2, equation3);
+  const [a, c, e] = solveEquation3(equation1, equation2, equation3);
 
   //传入y值解第二个方程 即  Y = bx + dy + f 求 bdf
   equation1[3] = cp1.y;
@@ -205,15 +194,7 @@ export function computeTransformMatrix(
   equation3[3] = cp3.y;
 
   //获得b、d、f
-  const { x: b, y: d, z: f } = solveEquation3(equation1, equation2, equation3);
-  // const [b, d, f] = solveEquation3(equation1, equation2, equation3);
+  const [b, d, f] = solveEquation3(equation1, equation2, equation3);
 
-  return {
-    a,
-    b,
-    c,
-    d,
-    e,
-    f,
-  };
+  return [a, b, c, d, e, f];
 }

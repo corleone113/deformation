@@ -1,4 +1,3 @@
-import { Point2D } from '@/shapes/curve/canvas-compute';
 import { initDrawingCurveImage } from '@/shapes/curve/gl-render';
 
 let xCount = '200',
@@ -69,7 +68,7 @@ document.body.append(
 const img = new Image();
 let genDrawing: (xCount: number, yCount?: number) => (angle: number) => void;
 let drawingFn: (angle: number) => void;
-img.src = '/assets/hailang.jpg';
+img.src = '/assets/pic.jpg';
 img.onload = () => {
   const { width, height } = img;
   newWidth = 350;

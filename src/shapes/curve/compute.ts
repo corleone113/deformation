@@ -1,21 +1,20 @@
-import { computeOriginalPoints, Point2D } from './canvas-compute';
+import { computeOriginalPoints } from '../../utils/canvas-compute';
 import { angleToRadian } from '@/utils/math';
-
-export type SignDirection = 1 | -1;
-export type PointCallback = (x: number, y: number) => void;
 
 const { PI, hypot, tan, atan2, cos, sin, sign } = Math;
 
 /**
- * 求矩形弯曲后所有半扇形上的顶点
- * @param pa 矩形左上顶点坐标
- * @param pb 矩形右上顶点坐标
- * @param pc 矩形右下顶点坐标
- * @param pd 矩形左下顶点坐标
+ * 求矩形弯曲后的图片区域的所有顶点
+ * @param pa 原始图片矩形区域左上顶点坐标
+ * @param pb 原始图片矩形区域右上顶点坐标
+ * @param pc 原始图片矩形区域右下顶点坐标
+ * @param pd 原始图片矩形区域左下顶点坐标
  * @param angle 弯曲角度
  * @param xCount 水平分段数量
  * @param yCount 垂直分段数量
- * @returns 半扇形上的顶点数组
+ * @param yDir y轴方向——1表示向下，-1则相反
+ * @param widthHeightRatio 画布宽高比
+ * @returns 弯曲后图片上的顶点数组
  */
 export function computeCurvePoints(
   pa: Point2D,
@@ -25,17 +24,18 @@ export function computeCurvePoints(
   angle: number,
   xCount = 10,
   yCount = xCount,
-  coordDir: SignDirection = 1,
+  yDir: CoordDirection = 1,
   widthHeightRatio = 1
 ): Point2D[] {
   if (angle > 180 || angle < -180) {
     return [];
   }
-  // 弯曲角度为0则返回原矩形的所有端点
+  // 弯曲角度为0则返回原图片矩形的所有顶点数组
   if (angle === 0) {
     return computeOriginalPoints(pa, pb, pc, pd, xCount, yCount);
   }
   const curvePoints: Point2D[] = [];
+  // 计算并更新弯曲的图片的顶点数组
   handleCurvePoints(
     pa,
     pb,
@@ -47,12 +47,25 @@ export function computeCurvePoints(
     },
     xCount,
     yCount,
-    coordDir,
+    yDir,
     widthHeightRatio
   );
   return curvePoints;
 }
 
+/**
+ * 计算处弯曲后图片上的顶点并利用顶点数据进行操作
+ * @param pa 原始图片矩形区域左上顶点坐标
+ * @param pb 原始图片矩形区域右上顶点坐标
+ * @param pc 原始图片矩形区域右下顶点坐标
+ * @param pd 原始图片矩形区域左下顶点坐标
+ * @param angle 图片弯曲的角度
+ * @param pointCallback 使用顶点数据的回调
+ * @param xCount 水平方向的分段数量
+ * @param yCount 垂直方向的分段数量
+ * @param yDir y轴方向——1表示向下，-1则相反
+ * @param widthHeightRatio 画布宽高比
+ */
 export function handleCurvePoints(
   pa: Point2D,
   pb: Point2D,
@@ -62,25 +75,27 @@ export function handleCurvePoints(
   pointCallback: PointCallback,
   xCount = 10,
   yCount = xCount,
-  coordDir: SignDirection = 1,
+  yDir: CoordDirection = 1,
   widthHeightRatio = 1
 ): void {
+  // 角度转化为弧度
   angle = angleToRadian(angle);
+  // 计算角度相关的参数
   const { curveDir, offsetRad, realStep, from } = computeAngleParams(
     pa,
     pb,
     angle,
     xCount,
-    coordDir,
+    yDir,
     widthHeightRatio
   );
-  // 扇形左边上的所有顶点
+  // 扇形(弯曲后的形状为扇形)左边上的所有顶点
   const leftEndPoints = computeCurveEndPoints(
     pa,
     pd,
     angle,
     yCount,
-    -coordDir as SignDirection,
+    -yDir as CoordDirection,
     widthHeightRatio
   );
   // 扇形右边上的所有顶点
@@ -89,21 +104,23 @@ export function handleCurvePoints(
     pc,
     angle,
     yCount,
-    coordDir as SignDirection,
+    yDir as CoordDirection,
     widthHeightRatio
   );
   for (let i = 0; i < leftEndPoints.length; ++i) {
+    // 计算每对顶点对应的圆弧上的顶点，并传入到回调中进行处理
     computePointsOnArc(
       leftEndPoints[i],
       rightEndPoints[i],
       angle,
       xCount,
-      coordDir,
+      yDir,
       widthHeightRatio,
       curveDir,
       offsetRad,
       realStep,
       from,
+      i,
       pointCallback
     );
   }
@@ -116,6 +133,7 @@ export function handleCurvePoints(
  * @param angle 弯曲角度
  * @param stepCount 分段数量
  * @param dir 旋转方向，angle为正则1表示顺时针(右侧)，-1表示逆时针(左侧)
+ * @param widthHeightRatio 画布的宽高比
  * @returns 该边弯曲(旋转)后的顶点数组
  */
 function computeCurveEndPoints(
@@ -123,7 +141,7 @@ function computeCurveEndPoints(
   p2: Point2D,
   angle: number,
   stepCount: number,
-  dir: SignDirection,
+  dir: CoordDirection,
   widthHeightRatio: number
 ) {
   const { x: x1, y: y1 } = p1;
@@ -146,37 +164,45 @@ function computeCurveEndPoints(
     stepCount;
   const startPoint = isOpposite ? p1 : p2;
   const endPoints: Point2D[] = [];
-  // 获取所有顶点
+  // 计算出所有的顶点
   for (let i = 0; i <= stepCount; ++i) {
     endPoints.push({
       x: startPoint.x + i * stepX,
       y: startPoint.y + i * stepY,
     });
   }
-  // 获取的顶点的顺序是相反需要倒序，如果是反向弯曲则不需要倒序
+  // 顶点的顺序是相反需要倒序，如果是反向弯曲则不需要倒序
   return isOpposite ? endPoints : endPoints.reverse();
 }
 
 /**
- * 求圆弧上的顶点数组
+ * 求圆弧上的顶点的数组
  * @param p1 圆弧的左端点
  * @param p2 圆弧的右端点
  * @param angle 弯曲角度(圆弧角度)
  * @param stepCount 分段数量
- * @returns 顶点数组
+ * @param yDir y轴方向——1表示向下，-1则相反
+ * @param widthHeightRatio 画布宽高比
+ * @param curveDir 圆弧弯曲的方向，1表示向上弯曲，-1则相反
+ * @param offsetRad 左右端点组成的向量相对于+x轴的角度
+ * @param realStep 圆心到圆弧上两个顶点的向量的夹角
+ * @param from 圆心到左端点的向量相对于+y轴的角度
+ * @param yIndex 当前顶点的y方向的索引
+ * @param pointCallback 使用顶点数据的回调
  */
 function computePointsOnArc(
   p1: Point2D,
   p2: Point2D,
   angle: number,
   stepCount: number,
-  coordDir: SignDirection,
+  yDir: CoordDirection,
   widthHeightRatio: number,
   curveDir: number,
   offsetRad: number,
   realStep: number,
   from: number,
-  pointCallback: (x: number, y: number) => void
+  yIndex: number,
+  pointCallback: PointCallback
 ) {
   const pa = { ...p1 };
   const pb = { ...p2 };
@@ -184,45 +210,58 @@ function computePointsOnArc(
   pb.y /= widthHeightRatio;
   const { x: x1, y: y1 } = pa;
   const { x: x2, y: y2 } = pb;
-  // 端点和圆心构成的三角形中圆心点的对边的一半
+  // 两端点和圆心构成的三角形中圆心点的对边的一半
   const sinLen = hypot(x2 - x1, y2 - y1) / 2;
-  // 端点和圆心构成的三角形圆心对边上的中线, 该中线正好将三角形分为两个全等三角形
+  // 两端点和圆心构成的三角形中圆心对边上的中线, 该中线正好将三角形分为两个全等三角形
   const cosLen = sinLen / tan(angle / 2);
   // 圆心y坐标
-  const centerY = (y2 + y1) / 2 + cosLen * cos(offsetRad) * coordDir;
+  const centerY = (y2 + y1) / 2 + cosLen * cos(offsetRad) * yDir;
   // 圆心x坐标
   const centerX = (x2 + x1) / 2 + cosLen * sin(offsetRad);
   // 圆弧半径
   const radius = hypot(sinLen, cosLen);
-  // 求圆弧上的顶点
+  // 求圆弧上的顶点，并传入回调中执行
   for (let i = from, count = 0; count <= stepCount; i += realStep, ++count) {
     pointCallback(
       centerX + radius * sin(i),
-      (centerY + radius * cos(i) * curveDir) * widthHeightRatio
+      (centerY + radius * cos(i) * curveDir) * widthHeightRatio,
+      count,
+      yIndex,
     );
   }
 }
 
+/**
+ * 计算求圆弧上顶点时需要的角度相关的参数
+ * @param p1 圆弧左/上端点
+ * @param p2 圆弧右/下端点
+ * @param angle 弯曲的角度
+ * @param stepCount 分段数量
+ * @param yDir y轴方向——1表示向下，-1则相反
+ * @param widthHeightRatio 画布宽高比
+ * @returns 返回角度相关的参数
+ */
 function computeAngleParams(
   p1: Point2D,
   p2: Point2D,
   angle: number,
   stepCount: number,
-  coordDir: SignDirection,
+  yDir: CoordDirection,
   widthHeightRatio: number
 ) {
   const pa = { ...p1 };
   const pb = { ...p2 };
+  // 获取等比例下y方向分量——主要是应对webgl下的场景，webgl下需要将传入的顶点的x/y值映射到-1到1的范围(相对于画布的宽高)
   pa.y /= widthHeightRatio;
   pb.y /= widthHeightRatio;
   const { x: x1, y: y1 } = pa;
   const { x: x2, y: y2 } = pb;
-  // 圆弧左边部分的角度方向
-  const curveDir = -sign(angle) * coordDir;
-  // p1到p2的向量的旋转角度(上方向为y正向)
-  const offsetRad = atan2((y1 - y2) * coordDir, x2 - x1) % PI;
+  // 圆弧弯曲的方向(中心线的方向)，1表示向上弯曲，-1则相反
+  const curveDir = -sign(angle) * yDir;
+  // p1到p2的向量的旋转角度
+  const offsetRad = atan2((y1 - y2) * yDir, x2 - x1) % PI;
   // 设置正确的旋转角度
-  angle *= coordDir;
+  angle *= yDir;
   // 旋转角度分量
   const realStep = (-curveDir * angle) / stepCount;
   // 向量op1的旋转角度，旋转起始角度

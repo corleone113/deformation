@@ -1,10 +1,3 @@
-export interface TextRect {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
 export function computeTextRect(
   ctx: CanvasRenderingContext2D,
   text: string,

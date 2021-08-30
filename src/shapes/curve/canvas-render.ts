@@ -1,22 +1,20 @@
 import { computeCurvePoints } from '@/shapes/curve/compute';
-import { TextRect } from '@/utils/canvas-text';
 import {
   canDrawClip,
   computeClipShapePaths,
   computeOriginalPoints,
   computeTransformMatrix,
-  Point2D,
-} from './canvas-compute';
+} from '@/utils/canvas-compute';
 
-interface TransformMatrix2D {
-  a: number;
-  b: number;
-  c: number;
-  d: number;
-  e: number;
-  f: number;
-}
-
+/**
+ * 绘制弯曲的文本
+ * @param ctx canvas 2d绘制上下文
+ * @param angle 弯曲的角度
+ * @param xCount 水平方向分段数量
+ * @param yCount 垂直方向分段数量
+ * @param textPicture 绘制的文本的图片
+ * @param textRect 绘制的位置、尺寸
+ */
 export function drawCurveText(
   ctx: CanvasRenderingContext2D,
   angle: number,
@@ -46,9 +44,20 @@ export function drawCurveText(
   );
 }
 
-
 /**
- * 绘制弯曲(拱形)图片
+ * 绘制弯曲后的图片
+ * @param ctx canvas 2d绘制上下文
+ * @param pa 图片矩形的左上顶点
+ * @param pb 图片矩形的右上顶点
+ * @param pc 图片矩形的右下顶点
+ * @param pd 图片矩形的左下顶点
+ * @param angle 弯曲的角度
+ * @param xCount 水平方向分段数量
+ * @param img 原始图片资源
+ * @param hasDot 是否绘制顶点
+ * @param hasLine 是否绘制划分后的三角形的边
+ * @param hasPic 是否绘制图片
+ * @param yCount 垂直方向分段数量
  */
 export function drawCurveImage(
   ctx: CanvasRenderingContext2D,
@@ -64,25 +73,28 @@ export function drawCurveImage(
   hasPic = true,
   yCount = xCount
 ) {
+  // 弯曲的图片的所有顶点
   const originalPoints = computeOriginalPoints(pa, pb, pc, pd, xCount, yCount);
+  // 弯曲后的图片的所有顶点
   const curvePoints = computeCurvePoints(pa, pb, pc, pd, angle, xCount, yCount);
 
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-  console.time('canvas draw')
+  // console.time('canvas draw')
   curvePoints.forEach((p, i) => {
-    //获取平行四边形的四个点
+    //获取弯曲后的四边形的四个点
     const p1 = curvePoints[i];
     const p2 = curvePoints[i + 1];
     const p3 = curvePoints[i + xCount + 2];
     const p4 = curvePoints[i + xCount + 1];
 
-    //获取初始平行四边形的四个点
+    //获取初始矩形的四个点
     const op1 = originalPoints[i];
     const op2 = originalPoints[i + 1];
     const op3 = originalPoints[i + xCount + 2];
     const op4 = originalPoints[i + xCount + 1];
 
     if (canDrawClip(curvePoints, i, xCount)) {
+      // 计算绘制路径顶点数组
       const { upPath, downPath } = computeClipShapePaths(
         p1,
         p2,
@@ -122,9 +134,19 @@ export function drawCurveImage(
       ctx.fillRect(p.x - 1, p.y - 1, 2, 2);
     }
   });
-  console.timeEnd('canvas draw')
+  // console.timeEnd('canvas draw')
 }
 
+/**
+ * 绘制弯曲后的图片的某个裁剪区域
+ * @param ctx canvas 2d绘制上下文
+ * @param matrix 2d模型变换矩阵
+ * @param points 路径顶点数组
+ * @param startPoint 路径起始顶点
+ * @param img 原始图片源
+ * @param hasLine 是否绘制划分后的三角形的边
+ * @param hasPic 是否绘制图片
+ */
 function renderClipImage(
   ctx: CanvasRenderingContext2D,
   matrix: TransformMatrix2D,
@@ -142,16 +164,18 @@ function renderClipImage(
     ctx.lineTo(p.x, p.y);
   }
   ctx.closePath();
+  // 在这里绘制三角形边框
   if (hasLine) {
     ctx.lineWidth = 1;
     ctx.strokeStyle = 'indianred';
     ctx.stroke();
   }
+  // 裁剪
   ctx.clip();
 
   if (hasPic) {
     //变形
-    ctx.transform(matrix.a, matrix.b, matrix.c, matrix.d, matrix.e, matrix.f);
+    ctx.transform(...matrix);
     //绘制图片
     ctx.drawImage(img, startPoint.x, startPoint.y, img.width, img.height);
   }
