@@ -18,7 +18,7 @@ export function canDrawClip(points: Point2D[], i: number, stepCount: number) {
  * @param pb 矩形的右上顶点
  * @param pc 矩形的右下顶点
  * @param pd 矩形的左下顶点
- * @param i 矩形的索引
+ * @param i 矩形左上角顶点的索引
  * @param stepCount 分段数量
  * @param curvePoints 变形后的所有矩形的顶点数组
  * @returns 该矩形左上和右下部分的多边形的顶点数组(裁剪路径数组)
@@ -169,7 +169,7 @@ export function computeOriginalPoints(
  * @param cp2    变化后坐标2
  * @param p3     变化前坐标3
  * @param cp3    变化后坐标3
- * @returns {{a: number, b: number, c: number, d: number, e: number, f: number}}
+ * @returns 2d模型变换矩阵
  */
 export function computeTransformMatrix(
   p1: Point2D,

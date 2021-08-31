@@ -1,4 +1,5 @@
-import { initDrawingCurveImage } from '@/shapes/curve/gl-render';
+import { initDrawingCurveText } from '@/shapes/curve/gl-render';
+import { computeTextRect, genTextPicture } from '@/utils/canvas-text';
 import {
   FC,
   useState,
@@ -11,16 +12,13 @@ import {
 } from 'react';
 
 type StaticDrawingParams = [
-  HTMLCanvasElement,
-  Point2D,
-  Point2D,
-  Point2D,
-  Point2D,
-  HTMLImageElement
+  cvs: HTMLCanvasElement,
+  textPicture: ImageBitmap,
+  textRect: TextRect,
 ];
-export const GLCurvePicture: FC = memo(() => {
-  const [xCount, setXCount] = useState(2);
-  const [yCount, setYCount] = useState(2);
+export const GLCurveText: FC = memo(() => {
+  const [xCount, setXCount] = useState(200);
+  const [yCount, setYCount] = useState(200);
   const [angle, setAngle] = useState(150);
   const cvsRef = useRef<null | HTMLCanvasElement>(null);
   const [staticParams, setStaticParams] = useState<null | StaticDrawingParams>(
@@ -28,8 +26,8 @@ export const GLCurvePicture: FC = memo(() => {
   );
   const genDrawing = useMemo(() => {
     if (staticParams) {
-      const [cvs, pa, pb, pc, pd, img] = staticParams;
-      return initDrawingCurveImage(cvs, pa, pb, pc, pd, img);
+      const [cvs, textPicture, textRect] = staticParams;
+      return initDrawingCurveText(cvs, textPicture, textRect)
     }
     return null;
   }, [staticParams]);
@@ -50,21 +48,24 @@ export const GLCurvePicture: FC = memo(() => {
   }, []);
 
   useEffect(() => {
-    const cvs = cvsRef.current as HTMLCanvasElement;
-    const img = new Image();
-    img.src = '/assets/pic.jpg';
-    img.onload = () => {
-      const { width, height } = img;
-      const imgWidth = 350;
-      const imgHeight = (height * imgWidth) / width;
-      img.width = imgWidth;
-      img.height = imgHeight;
-      const pa = { x: 300, y: 160 };
-      const pb = { x: pa.x + imgWidth, y: pa.y };
-      const pc = { x: pa.x + imgWidth, y: pa.y + imgHeight };
-      const pd = { x: pa.x, y: pa.y + imgHeight };
-      setStaticParams([cvs, pa, pb, pc, pd, img]);
-    };
+      const cvs = cvsRef.current as HTMLCanvasElement
+    const ctx = (cvs.cloneNode() as HTMLCanvasElement).getContext(
+        '2d'
+      ) as CanvasRenderingContext2D;
+      ctx.font = '48px serif';
+      ctx.textBaseline = 'top';
+      ctx.fillStyle = 'indianred';
+      const text = '点击编辑文字';
+      const drawPoint: Point2D = { x: 300, y: 260 };
+      const hiddenCtx = document
+        .createElement('canvas')
+        .getContext('2d') as CanvasRenderingContext2D;
+      const textRect = computeTextRect(ctx, text, drawPoint.x, drawPoint.y);
+      const asyncEffect = async () => {
+        const textPicture = await genTextPicture(hiddenCtx, ctx, text, textRect);
+        setStaticParams([cvs, textPicture, textRect]);
+      }
+      asyncEffect()
   }, []);
   useEffect(() => {
     if (drawingFn) {
@@ -73,7 +74,7 @@ export const GLCurvePicture: FC = memo(() => {
   }, [drawingFn, angle]);
   return (
     <>
-      <p>WebGL版图片变形</p>
+      <p>WebGL版文字变形</p>
       <canvas width={1000} height={600} ref={cvsRef}></canvas>
       <br />
       <label htmlFor="xCount"> xCount: </label>
