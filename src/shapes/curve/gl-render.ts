@@ -2,9 +2,7 @@ import { initTextureRenderer } from '@/utils/gl-texture';
 import {
   computeNDCEndPositions,
   genVerticesUpdater,
-  genVerticesUpdater1,
   updatePicVertices,
-  updatePicVertices1,
 } from '@/utils/gl-compute';
 import { handleCurvePoints } from './compute';
 
@@ -67,19 +65,14 @@ export function initDrawingCurveImage(
     const picVertices = new Float32Array(shapeVertices);
     updatePicVertices(tl, tr, bl, picVertices, xCount, yCount, flip);
     const updater = genVerticesUpdater(shapeVertices, xCount, yCount);
-
-    const verticesCoords = new Float32Array(xCount * yCount * 24);
-    updatePicVertices1(tl, tr, bl, verticesCoords, xCount, yCount, flip, 2);
-    const updater1 = genVerticesUpdater1(verticesCoords, xCount, yCount);
     return (angle: number) => {
       if (angle > 180 || angle < -180) {
         return;
       }
-      console.time('draw gl')
+      // console.time('draw gl')
       // 弯曲角度为0则返回原矩形的所有端点
       if (angle === 0) {
         updatePicVertices(pa, pb, pd, shapeVertices, xCount, yCount);
-        updatePicVertices1(pa, pb, pd, verticesCoords, xCount, yCount, false, 2);
       } else {
         handleCurvePoints(
           pa,
@@ -93,23 +86,9 @@ export function initDrawingCurveImage(
           -1,
           widthHeightRatio
         );
-        handleCurvePoints(
-          pa,
-          pb,
-          pc,
-          pd,
-          angle,
-          updater1,
-          xCount,
-          yCount,
-          -1,
-          widthHeightRatio
-        );
       }
-      // drawingFn?.(shapeVertices, picVertices);
-      drawingFn?.(verticesCoords)
-      console.log('vertices', shapeVertices, picVertices, verticesCoords)
-      console.timeEnd('draw gl')
+      drawingFn?.(shapeVertices, picVertices);
+      // console.timeEnd('draw gl')
     };
   };
 }

@@ -19,8 +19,8 @@ type StaticDrawingParams = [
   HTMLImageElement
 ];
 export const GLCurvePicture: FC = memo(() => {
-  const [xCount, setXCount] = useState(2);
-  const [yCount, setYCount] = useState(2);
+  const [xCount, setXCount] = useState(200);
+  const [yCount, setYCount] = useState(200);
   const [angle, setAngle] = useState(150);
   const cvsRef = useRef<null | HTMLCanvasElement>(null);
   const [staticParams, setStaticParams] = useState<null | StaticDrawingParams>(
