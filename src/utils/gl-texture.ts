@@ -31,7 +31,6 @@ export function initTextureRenderer(
     return console.error('着色器初始化失败!');
   }
 
-  // Set texture
   if (!initTexture(gl, image)) {
     return console.error('纹理初始化失败!');
   }
@@ -41,16 +40,22 @@ export function initTextureRenderer(
     return console.error('初始化缓冲区对象失败!');
   }
 
-  return (shapeVertices: Float32Array, picVertices: Float32Array) => {
-    const { shapeBuffer, picBuffer } = initBufferResult;
-    gl.bindBuffer(gl.ARRAY_BUFFER, shapeBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, shapeVertices, gl.DYNAMIC_DRAW);
-    gl.bindBuffer(gl.ARRAY_BUFFER, picBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, picVertices, gl.DYNAMIC_DRAW);
-    const numberOfVertex = shapeVertices.length / 2;
+  return (
+    vertices: Float32Array,
+    texCoords: Float32Array,
+    updateCoords: boolean,
+    numberOfVertex: number
+  ) => {
+    const { verticesBuffer, coordsBuffer } = initBufferResult;
+    gl.bindBuffer(gl.ARRAY_BUFFER, verticesBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.DYNAMIC_DRAW);
+    if (updateCoords) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, coordsBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, texCoords, gl.DYNAMIC_DRAW);
+    }
 
     gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.drawArrays(gl.TRIANGLES, 0, numberOfVertex); // Draw the rectangle
+    gl.drawArrays(gl.TRIANGLES, 0, numberOfVertex);
   };
 }
 
@@ -58,19 +63,19 @@ function initVerticesAndCoordsBuffer(gl: WebGLRenderingContext) {
   const aPosition = gl.getAttribLocation(gl.program, 'a_Position');
   const aTexCoord = gl.getAttribLocation(gl.program, 'a_TexCoord');
   if (!~aPosition || !~aTexCoord) {
-    console.log('Failed to get the storage location of attrib');
+    console.log('获取attribute变量存储位置失败!');
     return null;
   }
-  const shapeBuffer = gl.createBuffer(),
-    picBuffer = gl.createBuffer();
-  if (!shapeBuffer || !picBuffer) {
-    console.log('Failed to create the buffer object');
+  const verticesBuffer = gl.createBuffer(),
+    coordsBuffer = gl.createBuffer();
+  if (!verticesBuffer || !coordsBuffer) {
+    console.log('创建缓冲区对象失败!');
     return null;
   }
-  bindArrayBuffer(gl, shapeBuffer, aPosition);
-  bindArrayBuffer(gl, picBuffer, aTexCoord);
+  bindArrayBuffer(gl, verticesBuffer, aPosition);
+  bindArrayBuffer(gl, coordsBuffer, aTexCoord);
 
-  return { shapeBuffer, picBuffer };
+  return { verticesBuffer, coordsBuffer };
 }
 
 function bindArrayBuffer(
@@ -85,35 +90,25 @@ function bindArrayBuffer(
 }
 
 function initTexture(gl: WebGLRenderingContext, image: TexImageSource) {
-  const texture = gl.createTexture(); // Create a texture object
+  const texture = gl.createTexture();
   if (!texture) {
-    console.log('Failed to create the texture object');
+    console.log('创建纹理对象失败!');
     return false;
   }
 
-  // Get the storage location of u_Sampler
   const u_Sampler = gl.getUniformLocation(gl.program, 'u_Sampler');
   if (!u_Sampler) {
-    console.log('Failed to get the storage location of u_Sampler');
+    console.log('获取取样器变量存储位置失败!');
     return false;
   }
-  // Flip the image's y axis
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
-
-  // Make the texture unit active
   gl.activeTexture(gl.TEXTURE0);
-  // Bind the texture object to the target
   gl.bindTexture(gl.TEXTURE_2D, texture);
-
-  // Set the texture parameters
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-  // Set the texture image
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-
-  // Set the texture unit 0 to the sampler
   gl.uniform1i(u_Sampler, 0);
   return true;
 }

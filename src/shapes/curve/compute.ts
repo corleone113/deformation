@@ -268,3 +268,21 @@ function computeAngleParams(
   const from = (angle / 2 + offsetRad) * curveDir;
   return { curveDir, offsetRad, realStep, from };
 }
+
+export const COMPUTE_VERTEX_SHADER = `
+  uniform float u_MaxRadius;
+  uniform float u_RadiusDelta;
+  uniform vec2 u_Center;
+  uniform float u_FromAngle;
+  uniform float u_AngleStep;
+  uniform float u_CurveDir;
+  uniform float u_WidthHeightRatio;
+  attribute vec2 a_PosIndices;
+  void main() {
+    float xIndex = a_PosIndices.x;
+    float yIndex = a_PosIndices.y;
+    float radius = u_MaxRadius - yIndex * u_RadiusDelta;
+    float angle = u_FromAngle + xIndex * u_AngleStep;
+    float x = u_Center.x + radius * sin(angle);
+  }
+`

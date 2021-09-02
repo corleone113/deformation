@@ -2,7 +2,7 @@ import { initTextureRenderer } from '@/utils/gl-texture';
 import {
   computeNDCEndPositions,
   genVerticesUpdater,
-  updatePicVertices,
+  updateRectangleVertices,
 } from '@/utils/gl-compute';
 import { handleCurvePoints } from './compute';
 
@@ -59,20 +59,24 @@ export function initDrawingCurveImage(
     bl = { x: 0, y: 0 };
   const widthHeightRatio = cvs.width / cvs.height;
   // 初始化gl绘制上下文,生成一个接收顶点数据和纹理坐标数据的绘制回调
-  const drawingFn = initTextureRenderer(cvs, img);
+  const render = initTextureRenderer(cvs, img);
+  let updateCoords = false;
   return (xCount: number, yCount = xCount) => {
-    const shapeVertices = new Float32Array(xCount * yCount * 12);
-    const picVertices = new Float32Array(shapeVertices);
-    updatePicVertices(tl, tr, bl, picVertices, xCount, yCount, flip);
-    const updater = genVerticesUpdater(shapeVertices, xCount, yCount);
+    const numberOfVertex = xCount * yCount * 6
+    const vertices = new Float32Array(numberOfVertex * 2);
+    const coords = new Float32Array(vertices);
+    const updater = genVerticesUpdater(vertices, xCount, yCount);
+    updateRectangleVertices(tl, tr, bl, coords, xCount, yCount, flip);
+    updateCoords = true
     return (angle: number) => {
+      // 暂不考虑大于180°或小于-180°的情况
       if (angle > 180 || angle < -180) {
         return;
       }
       // console.time('draw gl')
-      // 弯曲角度为0则返回原矩形的所有端点
+      // 弯曲角度为0则返回原始图片矩形区域的所有端点
       if (angle === 0) {
-        updatePicVertices(pa, pb, pd, shapeVertices, xCount, yCount);
+        updateRectangleVertices(pa, pb, pd, vertices, xCount, yCount);
       } else {
         handleCurvePoints(
           pa,
@@ -87,7 +91,8 @@ export function initDrawingCurveImage(
           widthHeightRatio
         );
       }
-      drawingFn?.(shapeVertices, picVertices);
+      render?.(vertices, coords, updateCoords, numberOfVertex);
+      updateCoords = false
       // console.timeEnd('draw gl')
     };
   };
