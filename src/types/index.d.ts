@@ -10,6 +10,20 @@ interface ShapePaths {
   downPath: Point2D[];
 }
 
+interface ArcParams {
+  radius: number,
+  center: Point2D,
+}
+
+interface CurveParams {
+  maxRadius: number,
+  radiusDelta: number,
+  center: Point2D,
+  fromAngle: number,
+    angleStep: number,
+    curveDir: number,
+}
+
 /** 2D模型矩阵
  * |a c e|
  * |b d f|

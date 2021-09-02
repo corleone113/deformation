@@ -3,6 +3,13 @@ export function angleToRadian(a: number) {
   return (a / 180) * PI;
 }
 
+export function addPoint2D(p1: Point2D, p2: Point2D) {
+  return {
+    x: p1.x + p2.x,
+    y: p1.y + p2.y
+  }
+}
+
 export function solveEquation3(
   equation1: number[],
   equation2: number[],

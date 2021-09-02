@@ -180,3 +180,44 @@ export function updateRectangleVertices(
     }
   }
 }
+
+export function updatePosIndices(
+  posIndices: Float32Array,
+  xCount: number,
+  yCount = xCount,
+  flip = false
+) {
+  let endYIndex = flip ? -1 : yCount + 1,
+    yIndexDelta = flip ? -1 : 1,
+    index = 0;
+  for (let i = flip ? yCount : 0; i !== endYIndex; i += yIndexDelta) {
+    for (let j = 0; j <= xCount; ++j) {
+      if (i != endYIndex - yIndexDelta && j < xCount) {
+        // 当前分段矩形左边缘x索引
+        const lX = j;
+        // 当前分段矩形右边缘x索引
+        const rX = j + 1;
+        // 当前分段矩形上边缘y索引
+        const tY =  i;
+        // 当前分段矩形下边缘y索引
+        const bY = i + yIndexDelta;
+
+        // 更新当前分段矩形左上三角形三个顶点索引数据到类型数组中
+        posIndices[index++] = lX;
+        posIndices[index++] = tY;
+        posIndices[index++] = rX;
+        posIndices[index++] = tY;
+        posIndices[index++] = lX;
+        posIndices[index++] = bY;
+        // 更新当前分段矩形右下三角形三个顶点索引数据到类型数组中
+        posIndices[index++] = rX;
+        posIndices[index++] = tY;
+        posIndices[index++] = lX;
+        posIndices[index++] = bY;
+        posIndices[index++] = rX;
+        posIndices[index++] = bY;
+      }
+    }
+  }
+}
+

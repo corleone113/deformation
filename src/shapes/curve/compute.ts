@@ -1,5 +1,5 @@
 import { computeOriginalPoints } from '../../utils/canvas-compute';
-import { angleToRadian } from '@/utils/math';
+import { addPoint2D, angleToRadian } from '@/utils/math';
 
 const { PI, hypot, tan, atan2, cos, sin, sign } = Math;
 
@@ -109,7 +109,7 @@ export function handleCurvePoints(
   );
   for (let i = 0; i < leftEndPoints.length; ++i) {
     // 计算每对顶点对应的圆弧上的顶点，并传入到回调中进行处理
-    computePointsOnArc(
+    handlePointsOnArc(
       leftEndPoints[i],
       rightEndPoints[i],
       angle,
@@ -144,24 +144,19 @@ function computeCurveEndPoints(
   dir: CoordDirection,
   widthHeightRatio: number
 ) {
-  const { x: x1, y: y1 } = p1;
-  const { x: x2, y: y2 } = p2;
   // 是否反向弯曲
   const isOpposite = sign(angle) === -1;
-  // 边旋转的角度
-  const rotateRad = (angle / 2) * dir;
-  // 向量p2p1的x分量
-  const vectorX = isOpposite ? x2 - x1 : x1 - x2;
-  // 向量p2p1的y分量
-  const vectorY = isOpposite ? y2 - y1 : y1 - y2;
-  // 旋转后的向量x分量
-  const stepX =
-    (cos(rotateRad) * vectorX - (sin(rotateRad) * vectorY) / widthHeightRatio) /
-    stepCount;
-  // 旋转后的向量y分量
-  const stepY =
-    (sin(rotateRad) * vectorX * widthHeightRatio + cos(rotateRad) * vectorY) /
-    stepCount;
+  // 计算弯曲后的向量
+  const { x: vectorX, y: vectorY } = computeRotatedVector(
+    p1,
+    p2,
+    angle,
+    dir,
+    widthHeightRatio
+  );
+  const stepX = vectorX / stepCount,
+    stepY = vectorY / stepCount;
+
   const startPoint = isOpposite ? p1 : p2;
   const endPoints: Point2D[] = [];
   // 计算出所有的顶点
@@ -190,7 +185,7 @@ function computeCurveEndPoints(
  * @param yIndex 当前顶点的y方向的索引
  * @param pointCallback 使用顶点数据的回调
  */
-function computePointsOnArc(
+function handlePointsOnArc(
   p1: Point2D,
   p2: Point2D,
   angle: number,
@@ -204,6 +199,31 @@ function computePointsOnArc(
   yIndex: number,
   pointCallback: PointCallback
 ) {
+  // 计算圆弧相关参数
+  const {
+    center: {x: centerX, y: centerY},
+    radius,
+  } = computeArcParams(p1, p2, angle, yDir, widthHeightRatio, offsetRad);
+  
+  // 求圆弧上的顶点，并传入回调中执行
+  for (let i = from, count = 0; count <= stepCount; i += realStep, ++count) {
+    pointCallback(
+      centerX + radius * sin(i),
+      (centerY + radius * cos(i) * curveDir) * widthHeightRatio,
+      count,
+      yIndex
+    );
+  }
+}
+
+function computeArcParams(
+  p1: Point2D,
+  p2: Point2D,
+  angle: number,
+  yDir: CoordDirection,
+  widthHeightRatio: number,
+  offsetRad: number
+): ArcParams {
   const pa = { ...p1 };
   const pb = { ...p2 };
   pa.y /= widthHeightRatio;
@@ -214,21 +234,15 @@ function computePointsOnArc(
   const sinLen = hypot(x2 - x1, y2 - y1) / 2;
   // 两端点和圆心构成的三角形中圆心对边上的中线, 该中线正好将三角形分为两个全等三角形
   const cosLen = sinLen / tan(angle / 2);
-  // 圆心y坐标
-  const centerY = (y2 + y1) / 2 + cosLen * cos(offsetRad) * yDir;
-  // 圆心x坐标
-  const centerX = (x2 + x1) / 2 + cosLen * sin(offsetRad);
   // 圆弧半径
   const radius = hypot(sinLen, cosLen);
-  // 求圆弧上的顶点，并传入回调中执行
-  for (let i = from, count = 0; count <= stepCount; i += realStep, ++count) {
-    pointCallback(
-      centerX + radius * sin(i),
-      (centerY + radius * cos(i) * curveDir) * widthHeightRatio,
-      count,
-      yIndex,
-    );
-  }
+  return {
+    center: {
+      x: (x2 + x1) / 2 + cosLen * sin(offsetRad),
+      y: (y2 + y1) / 2 + cosLen * cos(offsetRad) * yDir,
+    },
+    radius,
+  };
 }
 
 /**
@@ -269,20 +283,84 @@ function computeAngleParams(
   return { curveDir, offsetRad, realStep, from };
 }
 
-export const COMPUTE_VERTEX_SHADER = `
-  uniform float u_MaxRadius;
-  uniform float u_RadiusDelta;
-  uniform vec2 u_Center;
-  uniform float u_FromAngle;
-  uniform float u_AngleStep;
-  uniform float u_CurveDir;
-  uniform float u_WidthHeightRatio;
-  attribute vec2 a_PosIndices;
-  void main() {
-    float xIndex = a_PosIndices.x;
-    float yIndex = a_PosIndices.y;
-    float radius = u_MaxRadius - yIndex * u_RadiusDelta;
-    float angle = u_FromAngle + xIndex * u_AngleStep;
-    float x = u_Center.x + radius * sin(angle);
-  }
-`
+export function computeCurveParams(
+  pa: Point2D,
+  pb: Point2D,
+  pc: Point2D,
+  pd: Point2D,
+  angle: number,
+  xCount: number,
+  yCount: number,
+  dir: CoordDirection,
+  widthHeightRatio: number,
+): CurveParams {
+  angle = angleToRadian(angle)
+  // 是否反向弯曲
+  const isOpposite = sign(angle) === -1;
+  const vectorAD = computeRotatedVector(
+    pa,
+    pd,
+    angle,
+    -dir as CoordDirection,
+    widthHeightRatio
+  );
+  const vectorBC = computeRotatedVector(pb, pc, angle, dir, widthHeightRatio);
+
+  const leftEndPoint = addPoint2D(isOpposite ? pa : pd, vectorAD);
+  const rightEndPoint = addPoint2D(isOpposite ? pb : pc, vectorBC);
+  const {
+    from: fromAngle,
+    realStep: angleStep,
+    curveDir,
+    offsetRad
+  } = computeAngleParams(
+    leftEndPoint,
+    rightEndPoint,
+    angle,
+    xCount,
+    dir,
+    widthHeightRatio
+  );
+  const { radius: maxRadius, center } = computeArcParams(
+    leftEndPoint,
+    rightEndPoint,
+    angle,
+    dir,
+    widthHeightRatio,
+    offsetRad
+  );
+  return {
+    maxRadius,
+    radiusDelta: hypot(vectorAD.x, vectorAD.y) / yCount,
+    center,
+    fromAngle,
+    angleStep,
+    curveDir,
+  };
+}
+
+function computeRotatedVector(
+  p1: Point2D,
+  p2: Point2D,
+  angle: number,
+  dir: CoordDirection,
+  widthHeightRatio: number
+) {
+  const { x: x1, y: y1 } = p1;
+  const { x: x2, y: y2 } = p2;
+  // 是否反向弯曲
+  const isOpposite = sign(angle) === -1;
+  // 边旋转的角度
+  const rotateRad = (angle / 2) * dir;
+  // 向量p2p1的x分量
+  const vectorX = isOpposite ? x2 - x1 : x1 - x2;
+  // 向量p2p1的y分量
+  const vectorY = isOpposite ? y2 - y1 : y1 - y2;
+  // 旋转后的向量x分量
+  const x =
+    cos(rotateRad) * vectorX - (sin(rotateRad) * vectorY) / widthHeightRatio;
+  // 旋转后的向量y分量
+  const y =
+    sin(rotateRad) * vectorX * widthHeightRatio + cos(rotateRad) * vectorY;
+  return { x, y };
+}
