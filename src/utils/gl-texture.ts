@@ -78,7 +78,7 @@ function initVerticesAndCoordsBuffer(gl: WebGLRenderingContext) {
   return { verticesBuffer, coordsBuffer };
 }
 
-function bindArrayBuffer(
+export function bindArrayBuffer(
   gl: WebGLRenderingContext,
   buffer: WebGLBuffer,
   attrib: number,
@@ -89,7 +89,7 @@ function bindArrayBuffer(
   gl.enableVertexAttribArray(attrib);
 }
 
-function initTexture(gl: WebGLRenderingContext, image: TexImageSource) {
+export function initTexture(gl: WebGLRenderingContext, image: TexImageSource) {
   const texture = gl.createTexture();
   if (!texture) {
     console.log('创建纹理对象失败!');

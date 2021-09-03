@@ -32,7 +32,6 @@ uniform sampler2D u_Sampler;
 varying vec2 v_TexCoord;
 void main() {
     vec4 color = texture2D(u_Sampler, v_TexCoord);
-    // gl_FragColor = vec4(1, 0, 0.3, 1);
     gl_FragColor = color;
 }
 `;
@@ -113,7 +112,7 @@ function initStaticParams(
     return console.log('获取uniform变量存储位置失败!');
   }
   return (
-    maxRadius: number,
+    upRadius: number,
     radiusDelta: number,
     center: Point2D,
     fromAngle: number,
@@ -121,7 +120,7 @@ function initStaticParams(
     curveDir: number,
     widthHeightRatio: number,
     usePos: boolean) => {
-      gl.uniform1f(u_MaxRadius, maxRadius)
+      gl.uniform1f(u_MaxRadius, upRadius)
       gl.uniform1f(u_RadiusDelta, radiusDelta)
       gl.uniform2f(u_Center, center.x, center.y)
       gl.uniform1f(u_FromAngle, fromAngle)

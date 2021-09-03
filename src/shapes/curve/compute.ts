@@ -201,10 +201,10 @@ function handlePointsOnArc(
 ) {
   // 计算圆弧相关参数
   const {
-    center: {x: centerX, y: centerY},
+    center: { x: centerX, y: centerY },
     radius,
   } = computeArcParams(p1, p2, angle, yDir, widthHeightRatio, offsetRad);
-  
+
   // 求圆弧上的顶点，并传入回调中执行
   for (let i = from, count = 0; count <= stepCount; i += realStep, ++count) {
     pointCallback(
@@ -292,9 +292,9 @@ export function computeCurveParams(
   xCount: number,
   yCount: number,
   dir: CoordDirection,
-  widthHeightRatio: number,
+  widthHeightRatio: number
 ): CurveParams {
-  angle = angleToRadian(angle)
+  angle = angleToRadian(angle);
   // 是否反向弯曲
   const isOpposite = sign(angle) === -1;
   const vectorAD = computeRotatedVector(
@@ -306,13 +306,13 @@ export function computeCurveParams(
   );
   const vectorBC = computeRotatedVector(pb, pc, angle, dir, widthHeightRatio);
 
-  const leftEndPoint = addPoint2D(isOpposite ? pa : pd, vectorAD);
-  const rightEndPoint = addPoint2D(isOpposite ? pb : pc, vectorBC);
+  const leftEndPoint = isOpposite ? pa : addPoint2D(pd, vectorAD);
+  const rightEndPoint = isOpposite ? pb : addPoint2D(pc, vectorBC);
   const {
     from: fromAngle,
     realStep: angleStep,
     curveDir,
-    offsetRad
+    offsetRad,
   } = computeAngleParams(
     leftEndPoint,
     rightEndPoint,
@@ -321,7 +321,7 @@ export function computeCurveParams(
     dir,
     widthHeightRatio
   );
-  const { radius: maxRadius, center } = computeArcParams(
+  const { radius: upRadius, center } = computeArcParams(
     leftEndPoint,
     rightEndPoint,
     angle,
@@ -329,9 +329,11 @@ export function computeCurveParams(
     widthHeightRatio,
     offsetRad
   );
+  const radiusDelta =
+    (sign(angle) * hypot(vectorAD.x, vectorAD.y / widthHeightRatio)) / yCount;
   return {
-    maxRadius,
-    radiusDelta: hypot(vectorAD.x, vectorAD.y) / yCount,
+    upRadius,
+    radiusDelta,
     center,
     fromAngle,
     angleStep,

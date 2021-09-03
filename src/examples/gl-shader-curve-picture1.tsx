@@ -1,4 +1,4 @@
-import { initDrawingCurveImage1 } from '@/shapes/curve/gl-render';
+import { initDrawingCurveImage2 } from '@/shapes/curve/gl-render';
 import {
   FC,
   useState,
@@ -18,7 +18,7 @@ type StaticDrawingParams = [
   Point2D,
   HTMLImageElement
 ];
-export const GLCurvePicture1: FC = memo(() => {
+export const GLShaderCurvePicture: FC = memo(() => {
   const [xCount, setXCount] = useState(200);
   const [yCount, setYCount] = useState(200);
   const [angle, setAngle] = useState(0);
@@ -29,7 +29,7 @@ export const GLCurvePicture1: FC = memo(() => {
   const genDrawing = useMemo(() => {
     if (staticParams) {
       const [cvs, pa, pb, pc, pd, img] = staticParams;
-      return initDrawingCurveImage1(cvs, pa, pb, pc, pd, img);
+      return initDrawingCurveImage2(cvs, pa, pb, pc, pd, img);
     }
     return null;
   }, [staticParams]);
@@ -73,7 +73,7 @@ export const GLCurvePicture1: FC = memo(() => {
   }, [drawingFn, angle]);
   return (
     <>
-      <p>WebGL版图片变形1</p>
+      <p>WebGL版图片变形2</p>
       <canvas width={1000} height={600} ref={cvsRef}></canvas>
       <br />
       <label htmlFor="xCount"> xCount: </label>

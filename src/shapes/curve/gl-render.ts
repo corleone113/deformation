@@ -7,6 +7,7 @@ import {
 } from '@/utils/gl-compute';
 import { computeCurveParams, handleCurvePoints } from './compute';
 import { initTextureRenderer1 } from './gl-texture1';
+import { initTextureRenderer2 } from './gl-texture2';
 
 /**
  * 初始化绘制弯曲变形的图片的上下文并生成绘制回调
@@ -75,7 +76,7 @@ export function initDrawingCurveImage(
       if (angle > 180 || angle < -180) {
         return;
       }
-      console.time('draw gl')
+      console.time('draw gl');
       // 弯曲角度为0则返回原始图片矩形区域的所有端点
       if (angle === 0) {
         updateRectangleVertices(pa, pb, pd, vertices, xCount, yCount);
@@ -95,7 +96,7 @@ export function initDrawingCurveImage(
       }
       render?.(vertices, coords, updateCoords, numberOfVertex);
       updateCoords = false;
-      console.timeEnd('draw gl')
+      console.timeEnd('draw gl');
     };
   };
 }
@@ -129,7 +130,7 @@ export function initDrawingCurveImage1(
   return (xCount: number, yCount = xCount) => {
     const numberOfVertex = xCount * yCount * 6;
     const posIndices = new Float32Array(numberOfVertex * 2);
-    const vertices = new Float32Array(posIndices)
+    const vertices = new Float32Array(posIndices);
     const coords = new Float32Array(posIndices);
     updateRectangleVertices(pa, pb, pd, vertices, xCount, yCount);
     updateRectangleVertices(tl, tr, bl, coords, xCount, yCount, flip);
@@ -140,8 +141,8 @@ export function initDrawingCurveImage1(
       if (angle > 180 || angle < -180) {
         return;
       }
-      console.time('draw gl1')
-      const { maxRadius, radiusDelta, center, fromAngle, angleStep, curveDir } =
+      console.time('draw gl1');
+      const { upRadius, radiusDelta, center, fromAngle, angleStep, curveDir } =
         computeCurveParams(
           pa,
           pb,
@@ -154,7 +155,7 @@ export function initDrawingCurveImage1(
           widthHeightRatio
         );
       drawingFn(
-        maxRadius,
+        upRadius,
         radiusDelta,
         center,
         fromAngle,
@@ -163,7 +164,76 @@ export function initDrawingCurveImage1(
         widthHeightRatio,
         angle === 0
       );
-      console.timeEnd('draw gl1')
+      console.timeEnd('draw gl1');
+    };
+  };
+}
+
+export function initDrawingCurveImage2(
+  cvs: HTMLCanvasElement,
+  pa: Point2D,
+  pb: Point2D,
+  pc: Point2D,
+  pd: Point2D,
+  img: HTMLImageElement | ImageBitmap,
+  flip = false
+) {
+  [pa, pb, pc, pd] = computeNDCEndPositions(
+    pa,
+    pb,
+    pc,
+    pd,
+    cvs.width,
+    cvs.height
+  );
+  const tl = { x: 0, y: 1 },
+    tr = { x: 1, y: 1 },
+    bl = { x: 0, y: 0 };
+  const widthHeightRatio = cvs.width / cvs.height;
+  // 初始化gl绘制上下文,生成一个接收顶点数据和纹理坐标数据的绘制回调
+  const render = initTextureRenderer2(cvs, img);
+  if (!render) {
+    return console.error('初始化纹理渲染器失败!');
+  }
+  return (xCount: number, yCount = xCount) => {
+    const numberOfVertex = xCount * yCount * 6;
+    const vertices = new Float32Array(numberOfVertex * 2);
+    const coords = new Float32Array(vertices);
+    updateRectangleVertices(pa, pb, pd, vertices, xCount, yCount);
+    updateRectangleVertices(tl, tr, bl, coords, xCount, yCount, flip);
+    const drawingFn = render(vertices, coords, numberOfVertex);
+    return (angle: number) => {
+      // 暂不考虑大于180°或小于-180°的情况
+      if (angle > 180 || angle < -180) {
+        return;
+      }
+      console.time('draw gl2');
+      const { upRadius, radiusDelta, center, fromAngle, angleStep, curveDir } =
+        computeCurveParams(
+          pa,
+          pb,
+          pc,
+          pd,
+          angle,
+          xCount,
+          yCount,
+          -1,
+          widthHeightRatio
+        );
+      drawingFn?.(
+        upRadius,
+        radiusDelta,
+        center,
+        fromAngle,
+        angleStep,
+        curveDir,
+        widthHeightRatio,
+        angle === 0,
+        xCount,
+        yCount,
+        flip
+      );
+      console.timeEnd('draw gl2');
     };
   };
 }

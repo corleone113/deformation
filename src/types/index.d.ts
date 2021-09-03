@@ -16,7 +16,7 @@ interface ArcParams {
 }
 
 interface CurveParams {
-  maxRadius: number,
+  upRadius: number,
   radiusDelta: number,
   center: Point2D,
   fromAngle: number,
