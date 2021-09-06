@@ -22,7 +22,7 @@ export function initShaders(
 ) {
   const program = createProgram(gl, vshader, fshader);
   if (!program) {
-    console.log('Failed to create program');
+    console.error('Failed to create program');
     return false;
   }
 
@@ -68,7 +68,7 @@ export function createProgram(
   const linked = gl.getProgramParameter(program, gl.LINK_STATUS);
   if (!linked) {
     const error = gl.getProgramInfoLog(program);
-    console.log('Failed to link program: ' + error);
+    console.error('Failed to link program: ' + error);
     gl.deleteProgram(program);
     gl.deleteShader(fragmentShader);
     gl.deleteShader(vertexShader);
@@ -92,7 +92,7 @@ export function loadShader(
   // Create shader object
   const shader = gl.createShader(type);
   if (shader == null) {
-    console.log('unable to create shader');
+    console.error('unable to create shader');
     return null;
   }
 
@@ -106,7 +106,7 @@ export function loadShader(
   const compiled = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
   if (!compiled) {
     const error = gl.getShaderInfoLog(shader);
-    console.log('Failed to compile shader: ' + error, source);
+    console.error('Failed to compile shader: ' + error, source);
     gl.deleteShader(shader);
     return null;
   }

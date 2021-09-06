@@ -16,7 +16,7 @@ export const WebGLDebugUtils = (function () {
   };
 
   /**
-   * Which arguements are enums.
+   * Which arguments are enums.
    * @type {!Object.<number, string>}
    */
   const glValidEnumContexts: GLValidEnumContext = {

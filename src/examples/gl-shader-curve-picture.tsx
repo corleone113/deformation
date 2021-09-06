@@ -1,4 +1,4 @@
-import { initDrawingCurveImage1 } from '@/shapes/curve/gl-render';
+import { initDrawingCurveImage } from '@/shapes/curve/gl-shader-render';
 import {
   FC,
   useState,
@@ -19,9 +19,9 @@ type StaticDrawingParams = [
   HTMLImageElement
 ];
 export const GLShaderCurvePicture: FC = memo(() => {
-  const [xCount, setXCount] = useState(200);
-  const [yCount, setYCount] = useState(200);
-  const [angle, setAngle] = useState(0);
+  const [xCount, setXCount] = useState(500);
+  const [yCount, setYCount] = useState(500);
+  const [angle, setAngle] = useState(150);
   const cvsRef = useRef<null | HTMLCanvasElement>(null);
   const [staticParams, setStaticParams] = useState<null | StaticDrawingParams>(
     null
@@ -29,7 +29,7 @@ export const GLShaderCurvePicture: FC = memo(() => {
   const genDrawing = useMemo(() => {
     if (staticParams) {
       const [cvs, pa, pb, pc, pd, img] = staticParams;
-      return initDrawingCurveImage1(cvs, pa, pb, pc, pd, img);
+      return initDrawingCurveImage(cvs, pa, pb, pc, pd, img);
     }
     return null;
   }, [staticParams]);
@@ -73,7 +73,7 @@ export const GLShaderCurvePicture: FC = memo(() => {
   }, [drawingFn, angle]);
   return (
     <>
-      <p>WebGL版图片变形1</p>
+      <p>WebGL版图片变形(改进版)</p>
       <canvas width={1000} height={600} ref={cvsRef}></canvas>
       <br />
       <label htmlFor="xCount"> xCount: </label>

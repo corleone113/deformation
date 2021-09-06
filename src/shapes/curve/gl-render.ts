@@ -1,11 +1,30 @@
-import { initTextureRenderer } from '@/utils/gl-texture';
+import { bindArrayBuffer, initTexture } from '@/utils/gl-init';
 import {
   computeNDCEndPositions,
   genVerticesUpdater,
   updateRectangleVertices,
 } from '@/utils/gl-compute';
-import { computeCurveParams, handleCurvePoints } from './compute';
-import { initTextureRenderer1 } from './gl-texture1';
+import { handleCurvePoints } from './compute';
+import { getWebGLContext, initShaders } from '@/libs/cuon-utils';
+
+const VSHADER_SOURCE = `
+attribute vec4 a_Position;
+attribute vec2 a_TexCoord;
+varying vec2 v_TexCoord;
+void main() {
+    gl_Position = a_Position;
+    v_TexCoord = a_TexCoord;
+}
+`;
+const FSHADER_SOURCE = `
+precision highp float;
+uniform sampler2D u_Sampler;
+varying vec2 v_TexCoord;
+void main() {
+    vec4 color = texture2D(u_Sampler, v_TexCoord);
+    gl_FragColor = color;
+}
+`;
 
 /**
  * 初始化绘制弯曲变形的图片的上下文并生成绘制回调
@@ -74,7 +93,7 @@ export function initDrawingCurveImage(
       if (angle > 180 || angle < -180) {
         return;
       }
-      console.time('draw gl');
+      // console.time('draw gl');
       // 弯曲角度为0则返回原始图片矩形区域的所有端点
       if (angle === 0) {
         updateRectangleVertices(pa, pb, pd, vertices, xCount, yCount);
@@ -94,84 +113,66 @@ export function initDrawingCurveImage(
       }
       render?.(vertices, coords, updateCoords, numberOfVertex);
       updateCoords = false;
-      console.timeEnd('draw gl');
+      // console.timeEnd('draw gl');
     };
   };
 }
 
-export function initDrawingCurveImage1(
+export function initTextureRenderer(
   cvs: HTMLCanvasElement,
-  pa: Point2D,
-  pb: Point2D,
-  pc: Point2D,
-  pd: Point2D,
-  img: HTMLImageElement | ImageBitmap,
-  flip = false
+  image: TexImageSource
 ) {
-  [pa, pb, pc, pd] = computeNDCEndPositions(
-    pa,
-    pb,
-    pc,
-    pd,
-    cvs.width,
-    cvs.height
-  );
-  const tl = { x: 0, y: 1 },
-    tr = { x: 1, y: 1 },
-    bl = { x: 0, y: 0 };
-  const widthHeightRatio = cvs.width / cvs.height;
-  // 初始化gl绘制上下文,生成一个接收顶点数据和纹理坐标数据的绘制回调
-  const render = initTextureRenderer1(cvs, img);
-  if (!render) {
-    return console.error('初始化纹理渲染器失败!');
+  const gl = getWebGLContext(cvs);
+  if (!gl) {
+    return console.error('获取WebGL绘制上下文失败!');
   }
-  return (xCount: number, yCount = xCount) => {
-    const ctl = {x: 0, y: 0},
-    ctr = {x: xCount, y: 0},
-    cbl = {x: 0, y: yCount}
-    const numberOfVertex = xCount * yCount * 6;
-    const posIndices = new Float32Array(numberOfVertex * 2);
-    const vertices = new Float32Array(posIndices);
-    const coords = new Float32Array(posIndices);
-    console.time('updateRectangleVertices 1')
-    updateRectangleVertices(pa, pb, pd, vertices, xCount, yCount);
-    console.timeEnd('updateRectangleVertices 1')
-    console.time('updateRectangleVertices 2')
-    updateRectangleVertices(tl, tr, bl, coords, xCount, yCount, flip);
-    console.timeEnd('updateRectangleVertices 2')
-    console.time('updateRectangleVertices 3')
-    updateRectangleVertices(ctl, ctr, cbl, posIndices, xCount, yCount);
-    console.timeEnd('updateRectangleVertices 3')
-    const drawingFn = render(vertices, posIndices, coords, numberOfVertex);
-    return (angle: number) => {
-      // 暂不考虑大于180°或小于-180°的情况
-      if (angle > 180 || angle < -180) {
-        return;
-      }
-      console.time('draw gl1');
-      const { upRadius, radiusDelta, center, fromAngle, angleStep, curveDir } =
-        computeCurveParams(
-          pa,
-          pb,
-          pc,
-          pd,
-          angle,
-          xCount,
-          yCount,
-          -1,
-          widthHeightRatio
-        );
-      drawingFn(
-        upRadius,
-        radiusDelta,
-        center,
-        fromAngle,
-        angleStep,
-        curveDir,
-        widthHeightRatio,
-        angle === 0
-      );
-      console.timeEnd('draw gl1');
-    };
+  if (!initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE)) {
+    return console.error('着色器初始化失败!');
+  }
+
+  if (!initTexture(gl, image)) {
+    return console.error('纹理初始化失败!');
+  }
+
+  const initBufferResult = initVerticesAndCoordsBuffer(gl);
+  if (!initBufferResult) {
+    return console.error('初始化缓冲区对象失败!');
+  }
+
+  return (
+    vertices: Float32Array,
+    texCoords: Float32Array,
+    updateCoords: boolean,
+    numberOfVertex: number
+  ) => {
+    const { verticesBuffer, coordsBuffer } = initBufferResult;
+    gl.bindBuffer(gl.ARRAY_BUFFER, verticesBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.DYNAMIC_DRAW);
+    if (updateCoords) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, coordsBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, texCoords, gl.DYNAMIC_DRAW);
+    }
+
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawArrays(gl.TRIANGLES, 0, numberOfVertex);
   };
+}
+
+function initVerticesAndCoordsBuffer(gl: WebGLRenderingContext) {
+  const aPosition = gl.getAttribLocation(gl.program, 'a_Position');
+  const aTexCoord = gl.getAttribLocation(gl.program, 'a_TexCoord');
+  if (!~aPosition || !~aTexCoord) {
+    console.error('获取attribute变量存储位置失败!');
+    return null;
+  }
+  const verticesBuffer = gl.createBuffer(),
+    coordsBuffer = gl.createBuffer();
+  if (!verticesBuffer || !coordsBuffer) {
+    console.error('创建缓冲区对象失败!');
+    return null;
+  }
+  bindArrayBuffer(gl, verticesBuffer, aPosition);
+  bindArrayBuffer(gl, coordsBuffer, aTexCoord);
+
+  return { verticesBuffer, coordsBuffer };
 }

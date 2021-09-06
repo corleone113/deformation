@@ -11,17 +11,17 @@ interface ShapePaths {
 }
 
 interface ArcParams {
-  radius: number,
-  center: Point2D,
+  radius: number;
+  center: Point2D;
 }
 
 interface CurveParams {
-  upRadius: number,
-  radiusDelta: number,
-  center: Point2D,
-  fromAngle: number,
-    angleStep: number,
-    curveDir: number,
+  upRadius: number;
+  radiusDelta: number;
+  center: Point2D;
+  fromAngle: number;
+  angleStep: number;
+  curveDir: number;
 }
 
 /** 2D模型矩阵

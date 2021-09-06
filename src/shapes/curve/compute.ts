@@ -132,7 +132,7 @@ export function handleCurvePoints(
  * @param p2 顶点p1下方的顶点
  * @param angle 弯曲角度
  * @param stepCount 分段数量
- * @param dir 旋转方向，angle为正则1表示顺时针(右侧)，-1表示逆时针(左侧)
+ * @param yDir y轴方向——1表示向下，-1则相反
  * @param widthHeightRatio 画布的宽高比
  * @returns 该边弯曲(旋转)后的顶点数组
  */
@@ -141,7 +141,7 @@ function computeCurveEndPoints(
   p2: Point2D,
   angle: number,
   stepCount: number,
-  dir: CoordDirection,
+  yDir: CoordDirection,
   widthHeightRatio: number
 ) {
   // 是否反向弯曲
@@ -151,7 +151,7 @@ function computeCurveEndPoints(
     p1,
     p2,
     angle,
-    dir,
+    yDir,
     widthHeightRatio
   );
   const stepX = vectorX / stepCount,
@@ -209,6 +209,7 @@ function handlePointsOnArc(
   for (let i = from, count = 0; count <= stepCount; i += realStep, ++count) {
     pointCallback(
       centerX + radius * sin(i),
+      // 最后的y值需要乘以宽高比(之前除以宽高比以保证不受变形影响，这里要还原)
       (centerY + radius * cos(i) * curveDir) * widthHeightRatio,
       count,
       yIndex
@@ -216,6 +217,16 @@ function handlePointsOnArc(
   }
 }
 
+/**
+ * 计算圆弧相关参数
+ * @param p1 圆弧的一个端点
+ * @param p2 圆弧的另一个端点
+ * @param angle 圆弧角度
+ * @param yDir +y轴方向——1表示向下，-1则相反
+ * @param widthHeightRatio 宽高比
+ * @param offsetRad 两端点连线相对于水平方向的偏移角度
+ * @returns 圆弧相关参数
+ */
 function computeArcParams(
   p1: Point2D,
   p2: Point2D,
@@ -226,6 +237,7 @@ function computeArcParams(
 ): ArcParams {
   const pa = { ...p1 };
   const pb = { ...p2 };
+  // 若传入的pa、pb已经转换为NDC下的坐标，则需要除以宽高比保证计算的角度等信息不会存在误差(不会受变形影响)
   pa.y /= widthHeightRatio;
   pb.y /= widthHeightRatio;
   const { x: x1, y: y1 } = pa;
@@ -283,6 +295,19 @@ function computeAngleParams(
   return { curveDir, offsetRad, realStep, from };
 }
 
+/**
+ * 计算求圆弧上顶点需要的参数(这些参数用于在顶点着色器中基于顶点索引计算顶点新位置)
+ * @param pa 原始图片矩形区域左上顶点坐标
+ * @param pb 原始图片矩形区域右上顶点坐标
+ * @param pc 原始图片矩形区域右下顶点坐标
+ * @param pd 原始图片矩形区域左下顶点坐标
+ * @param angle 弯曲的角度
+ * @param xCount 水平方向分段数量
+ * @param yCount 垂直方向分段数量
+ * @param yDir +y轴方向——1表示向下，-1则相反
+ * @param widthHeightRatio 宽高比
+ * @returns 求圆弧上顶点所需的参数
+ */
 export function computeCurveParams(
   pa: Point2D,
   pb: Point2D,
@@ -291,23 +316,29 @@ export function computeCurveParams(
   angle: number,
   xCount: number,
   yCount: number,
-  dir: CoordDirection,
+  yDir: CoordDirection,
   widthHeightRatio: number
 ): CurveParams {
   angle = angleToRadian(angle);
+  const rotateDir = sign(angle);
   // 是否反向弯曲
-  const isOpposite = sign(angle) === -1;
+  const isOpposite = rotateDir === -1;
+  // pa和pd组成向量旋转后的向量
   const vectorAD = computeRotatedVector(
     pa,
     pd,
     angle,
-    -dir as CoordDirection,
+    -yDir as CoordDirection,
     widthHeightRatio
   );
-  const vectorBC = computeRotatedVector(pb, pc, angle, dir, widthHeightRatio);
+  // pb和pc组成向量旋转后的向量
+  const vectorBC = computeRotatedVector(pb, pc, angle, yDir, widthHeightRatio);
 
+  // 最上方圆弧左端点
   const leftEndPoint = isOpposite ? pa : addPoint2D(pd, vectorAD);
+  // 最上方圆弧右端点
   const rightEndPoint = isOpposite ? pb : addPoint2D(pc, vectorBC);
+  // 弯曲起始角度、弯曲角度变化步长、弯曲方向、左右两端点的组成向量相对于水平方向的偏移角度
   const {
     from: fromAngle,
     realStep: angleStep,
@@ -318,19 +349,21 @@ export function computeCurveParams(
     rightEndPoint,
     angle,
     xCount,
-    dir,
+    yDir,
     widthHeightRatio
   );
+  // 最上方圆弧的半径、中心点
   const { radius: upRadius, center } = computeArcParams(
     leftEndPoint,
     rightEndPoint,
     angle,
-    dir,
+    yDir,
     widthHeightRatio,
     offsetRad
   );
+  // 半径变化步长
   const radiusDelta =
-    (sign(angle) * hypot(vectorAD.x, vectorAD.y / widthHeightRatio)) / yCount;
+    (rotateDir * hypot(vectorAD.x, vectorAD.y / widthHeightRatio)) / yCount;
   return {
     upRadius,
     radiusDelta,
@@ -341,19 +374,28 @@ export function computeCurveParams(
   };
 }
 
+/**
+ * 计算点p1和点p2组成的向量旋转后的新向量
+ * @param p1 第一个点
+ * @param p2 第二个点
+ * @param angle 旋转角度
+ * @param yDir y轴方向——1表示向下，-1则相反
+ * @param widthHeightRatio 宽高比
+ * @returns 旋转后的向量
+ */
 function computeRotatedVector(
   p1: Point2D,
   p2: Point2D,
   angle: number,
-  dir: CoordDirection,
+  yDir: CoordDirection,
   widthHeightRatio: number
-) {
+): Point2D {
   const { x: x1, y: y1 } = p1;
   const { x: x2, y: y2 } = p2;
   // 是否反向弯曲
   const isOpposite = sign(angle) === -1;
   // 边旋转的角度
-  const rotateRad = (angle / 2) * dir;
+  const rotateRad = (angle / 2) * yDir;
   // 向量p2p1的x分量
   const vectorX = isOpposite ? x2 - x1 : x1 - x2;
   // 向量p2p1的y分量
