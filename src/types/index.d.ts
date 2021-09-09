@@ -15,6 +15,9 @@ interface ArcParams {
   center: Point2D;
 }
 
+/**
+ * 计算圆弧上顶点所需参数
+ */
 interface CurveParams {
   upRadius: number;
   radiusDelta: number;

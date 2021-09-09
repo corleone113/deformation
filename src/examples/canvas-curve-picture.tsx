@@ -1,4 +1,4 @@
-import { drawCurveImage } from '@/shapes/curve/canvas-render';
+import { drawCurveImage, drawCurveImage_Deprecated } from '@/shapes/curve/canvas-render';
 import {
   FC,
   useState,

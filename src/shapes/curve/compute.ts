@@ -154,9 +154,10 @@ function computeCurveEndPoints(
     yDir,
     widthHeightRatio
   );
+  // 变化的步长向量的x、y
   const stepX = vectorX / stepCount,
     stepY = vectorY / stepCount;
-
+  // 计算边上顶点时的起点，是变形时固定(角度符号未变化时)的点，也是旋转围绕的点
   const startPoint = isOpposite ? p1 : p2;
   const endPoints: Point2D[] = [];
   // 计算出所有的顶点
@@ -171,7 +172,7 @@ function computeCurveEndPoints(
 }
 
 /**
- * 求圆弧上的顶点的数组
+ * 计算圆弧上所有顶点数据，将每个顶点数据传入回调中进行处理
  * @param p1 圆弧的左端点
  * @param p2 圆弧的右端点
  * @param angle 弯曲角度(圆弧角度)
@@ -209,7 +210,7 @@ function handlePointsOnArc(
   for (let i = from, count = 0; count <= stepCount; i += realStep, ++count) {
     pointCallback(
       centerX + radius * sin(i),
-      // 最后的y值需要乘以宽高比(之前除以宽高比以保证不受变形影响，这里要还原)
+      // 最后的y值需要乘以宽高比(之前除以宽高比以保证不受画布宽高不相等的影响，这里要还原)
       (centerY + radius * cos(i) * curveDir) * widthHeightRatio,
       count,
       yIndex
@@ -237,7 +238,7 @@ function computeArcParams(
 ): ArcParams {
   const pa = { ...p1 };
   const pb = { ...p2 };
-  // 若传入的pa、pb已经转换为NDC下的坐标，则需要除以宽高比保证计算的角度等信息不会存在误差(不会受变形影响)
+  // 若传入的pa、pb已经转换为NDC下的坐标，则需要除以宽高比保证计算的角度等信息不会存在误差(画布宽高非1:1则转化到NDC下的坐标相当于被水平/垂直缩放过)
   pa.y /= widthHeightRatio;
   pb.y /= widthHeightRatio;
   const { x: x1, y: y1 } = pa;
@@ -396,9 +397,9 @@ function computeRotatedVector(
   const isOpposite = sign(angle) === -1;
   // 边旋转的角度
   const rotateRad = (angle / 2) * yDir;
-  // 向量p2p1的x分量
+  // 向量p2p1/p1p2的x分量
   const vectorX = isOpposite ? x2 - x1 : x1 - x2;
-  // 向量p2p1的y分量
+  // 向量p2p1/p1p2的y分量
   const vectorY = isOpposite ? y2 - y1 : y1 - y2;
   // 旋转后的向量x分量
   const x =

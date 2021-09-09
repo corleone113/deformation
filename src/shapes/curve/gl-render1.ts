@@ -1,8 +1,7 @@
 import { bindArrayBuffer, initTexture } from '@/utils/gl-init';
 import {
   computeNDCEndPositions,
-  genVerticesUpdater,
-  updateRectangleVertices,
+  updatePointIndices,
   updateRectangleVertices1,
 } from '@/utils/gl-compute';
 import { handleCurvePoints } from './compute';
@@ -84,15 +83,12 @@ export function initDrawingCurveImage(
   let updateCoords = false;
   return (xCount: number, yCount = xCount) => {
     const numberOfVertex = xCount * yCount * 6;
-    const vertices = new Float32Array(numberOfVertex * 2);
+    const pointIndices = new Uint8Array(numberOfVertex);
+    const numberOfPoints = (xCount + 1) * (yCount + 1) * 2;
+    const vertices = new Float32Array(numberOfPoints);
     const coords = new Float32Array(vertices);
-    const vertices1 = new Float32Array((xCount + 1) * (yCount +1) * 2);
-    const coords1 = new Float32Array(vertices1);
-    const vertices2 = new Float32Array((xCount + 1) * (yCount +1) * 2);
-    const coords2 = new Float32Array(vertices1);
-    const updater = genVerticesUpdater(vertices, vertices1, xCount, yCount);
-    updateRectangleVertices(tl, tr, bl, coords, coords1, xCount, yCount, flip);
-    updateRectangleVertices1(tl, tr, bl, coords2, xCount, yCount, flip)
+    updateRectangleVertices1(tl, tr, bl, coords, xCount, yCount, flip);
+    updatePointIndices(pointIndices, xCount, yCount)
     updateCoords = true;
     return (angle: number) => {
       // 暂不考虑大于180°或小于-180°的情况
@@ -102,21 +98,9 @@ export function initDrawingCurveImage(
       // console.time('draw gl');
       // 弯曲角度为0则返回原始图片矩形区域的所有端点
       if (angle === 0) {
-        updateRectangleVertices(pa, pb, pd, vertices, vertices1, xCount, yCount);
+        updateRectangleVertices1(pa, pb, pd, vertices, xCount, yCount);
       } else {
-        console.time('handleCurvePoints')
-        handleCurvePoints(
-          pa,
-          pb,
-          pc,
-          pd,
-          angle,
-          updater,
-          xCount,
-          yCount,
-          -1,
-          widthHeightRatio
-        );
+        // console.time('handleCurvePoints')
         let index = 0
         handleCurvePoints(
           pa,
@@ -125,23 +109,17 @@ export function initDrawingCurveImage(
           pd,
           angle,
           (x:number, y: number) => {
-            vertices2[index++] = x;
-            vertices2[index++] = y;
+            vertices[index++] = x;
+            vertices[index++] = y;
           },
           xCount,
           yCount,
           -1,
           widthHeightRatio
         );
-        console.timeEnd('handleCurvePoints')
+        // console.timeEnd('handleCurvePoints')
       }
-      for(let i=0;i<(xCount + 1) * (yCount +1) * 2;++i) {
-        if(vertices1[i] !== vertices2[i] || coords1[i] !== coords2[i]) {
-          console.log('&&&&&&&&>>>>>>')
-        }
-      }
-      console.log('>>>>', vertices1, vertices2)
-      render?.(vertices, coords, updateCoords, numberOfVertex);
+      render?.(vertices, coords, pointIndices, updateCoords, numberOfVertex);
       updateCoords = false;
       // console.timeEnd('draw gl');
     };
@@ -172,19 +150,23 @@ export function initTextureRenderer(
   return (
     vertices: Float32Array,
     texCoords: Float32Array,
+    pointIndices: Uint8Array,
     updateCoords: boolean,
     numberOfVertex: number
   ) => {
-    const { verticesBuffer, coordsBuffer } = initBufferResult;
+    const { verticesBuffer, coordsBuffer, indexBuffer } = initBufferResult;
     gl.bindBuffer(gl.ARRAY_BUFFER, verticesBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.DYNAMIC_DRAW);
     if (updateCoords) {
       gl.bindBuffer(gl.ARRAY_BUFFER, coordsBuffer);
       gl.bufferData(gl.ARRAY_BUFFER, texCoords, gl.DYNAMIC_DRAW);
+
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer)
+      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, pointIndices, gl.DYNAMIC_DRAW)
     }
 
     gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.drawArrays(gl.TRIANGLES, 0, numberOfVertex);
+    gl.drawElements(gl.TRIANGLES, numberOfVertex, gl.UNSIGNED_BYTE, 0);
   };
 }
 
@@ -196,13 +178,14 @@ function initVerticesAndCoordsBuffer(gl: WebGLRenderingContext) {
     return null;
   }
   const verticesBuffer = gl.createBuffer(),
-    coordsBuffer = gl.createBuffer();
-  if (!verticesBuffer || !coordsBuffer) {
+    coordsBuffer = gl.createBuffer(),
+    indexBuffer = gl.createBuffer();
+  if (!verticesBuffer || !coordsBuffer || !indexBuffer) {
     console.error('创建缓冲区对象失败!');
     return null;
   }
   bindArrayBuffer(gl, verticesBuffer, aPosition);
   bindArrayBuffer(gl, coordsBuffer, aTexCoord);
 
-  return { verticesBuffer, coordsBuffer };
+  return { verticesBuffer, coordsBuffer, indexBuffer };
 }

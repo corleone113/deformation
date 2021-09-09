@@ -81,7 +81,7 @@ export function initDrawingCurveImage(
     bl = { x: 0, y: 0 };
   const widthHeightRatio = cvs.width / cvs.height;
   // 初始化gl绘制上下文,生成一个接收顶点数据和纹理坐标数据的绘制回调
-  const renderGenerator = initTextureRenderer(cvs, img);
+  const renderGenerator = initTextureRendererGenerator(cvs, img);
   if (!renderGenerator) {
     return console.error('初始化纹理渲染器失败!');
   }
@@ -140,7 +140,7 @@ export function initDrawingCurveImage(
   };
 }
 
-function initTextureRenderer(
+function initTextureRendererGenerator(
   cvs: HTMLCanvasElement,
   image: TexImageSource
 ) {

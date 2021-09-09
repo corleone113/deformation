@@ -1,4 +1,4 @@
-import { initDrawingCurveImage } from '@/shapes/curve/gl-render';
+import { initDrawingCurveImage } from '@/shapes/curve/gl-render1';
 import {
   FC,
   useState,

@@ -73,13 +73,13 @@ export function drawCurveImage(
   hasPic = true,
   yCount = xCount
 ) {
+  console.time('render time')
   // 弯曲的图片的所有顶点
   const originalPoints = computeOriginalPoints(pa, pb, pc, pd, xCount, yCount);
   // 弯曲后的图片的所有顶点
   const curvePoints = computeCurvePoints(pa, pb, pc, pd, angle, xCount, yCount);
 
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-  // console.time('canvas draw')
   curvePoints.forEach((p, i) => {
     //获取弯曲后的四边形的四个点
     const p1 = curvePoints[i];
@@ -131,7 +131,74 @@ export function drawCurveImage(
 
     if (hasDot) {
       ctx.fillStyle = 'red';
-      ctx.fillRect(p.x - 1, p.y - 1, 2, 2);
+      ctx.fillRect(p.x - 2, p.y - 2, 4, 4);
+    }
+  });
+  console.timeEnd('render time')
+}
+
+export function drawCurveImage_Deprecated(
+  ctx: CanvasRenderingContext2D,
+  pa: Point2D,
+  pb: Point2D,
+  pc: Point2D,
+  pd: Point2D,
+  angle: number,
+  xCount: number,
+  img: HTMLImageElement | ImageBitmap,
+  hasDot = false,
+  hasLine = false,
+  hasPic = true,
+  yCount = xCount
+) {
+  // 弯曲的图片的所有顶点
+  const originalPoints = computeOriginalPoints(pa, pb, pc, pd, xCount, yCount);
+  // 弯曲后的图片的所有顶点
+  const curvePoints = computeCurvePoints(pa, pb, pc, pd, angle, xCount, yCount);
+
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  // console.time('canvas draw')
+  curvePoints.forEach((p, i) => {
+    //获取弯曲后的四边形的四个点
+    const p1 = curvePoints[i];
+    const p2 = curvePoints[i + 1];
+    const p3 = curvePoints[i + xCount + 2];
+    const p4 = curvePoints[i + xCount + 1];
+
+    //获取初始矩形的四个点
+    const op1 = originalPoints[i];
+    const op2 = originalPoints[i + 1];
+    const op3 = originalPoints[i + xCount + 2];
+    const op4 = originalPoints[i + xCount + 1];
+
+    if (canDrawClip(curvePoints, i, xCount)) {
+      //绘制三角形的上半部分
+      const upTransform = computeTransformMatrix(op1, p1, op2, p2, op4, p4);
+      renderClipImage(
+        ctx,
+        upTransform,
+        [p1, p2, p4],
+        originalPoints[0],
+        img,
+        hasLine,
+        hasPic
+      );
+      //绘制三角形的下半部分
+      const downTransform = computeTransformMatrix(op3, p3, op2, p2, op4, p4);
+      renderClipImage(
+        ctx,
+        downTransform,
+        [p3, p2, p4],
+        originalPoints[0],
+        img,
+        hasLine,
+        hasPic
+      );
+    }
+
+    if (hasDot) {
+      ctx.fillStyle = 'red';
+      ctx.fillRect(p.x - 2, p.y - 2, 4, 4);
     }
   });
   // console.timeEnd('canvas draw')
