@@ -7,7 +7,6 @@
  */
 export function genVerticesUpdater(
   curveVertices: Float32Array,
-  vertices1: Float32Array,
   xCount = 10,
   yCount = xCount
 ): PointCallback {
@@ -29,10 +28,6 @@ export function genVerticesUpdater(
    * @param yIndex 顶点按垂直排列的索引
    */
   return (x: number, y: number, xIndex: number, yIndex: number) => {
-    const i = (yIndex * (xCount + 1) + xIndex + 1) * 2 - 1
-    vertices1[i - 1] = x;
-    vertices1[i] = y;
-    console.log('x', x, 'y', y)
     // 非边缘上的顶点，求顶点数据的索引的规则参考：
     if (xIndex > 0 && xIndex < xCount && yIndex > 0 && yIndex < yCount) {
       const c1 = 12 * yIndex * xCount + 12 * xIndex,
@@ -145,7 +140,6 @@ export function updateRectangleVertices(
   pb: Point2D,
   pd: Point2D,
   vertices: Float32Array,
-  vertices1: Float32Array,
   xCount: number,
   yCount = xCount,
   flip = false
@@ -159,12 +153,6 @@ export function updateRectangleVertices(
     index1 = 0;
   for (let i = flip ? yCount : 0; i !== endYIndex; i += yIndexDelta) {
     for (let j = 0; j <= xCount; ++j) {
-       // 当前分段矩形左边缘x坐标
-       const lX = x + j * xStep;
-       // 当前分段矩形上边缘y坐标
-       const tY = y + i * yStep;
-       vertices1[index1++] = lX;
-       vertices1[index1++] = tY;
       if (i != endYIndex - yIndexDelta && j < xCount) {
         // 当前分段矩形左边缘x坐标
         const lX = x + j * xStep;
@@ -221,7 +209,7 @@ export function updateRectangleVertices1(
 }
 
 export function updatePointIndices(
-  pointIndices: Uint8Array,
+  pointIndices: Uint32Array,
   xCount: number,
   yCount = xCount
 ) {

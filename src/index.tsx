@@ -14,7 +14,7 @@ render(
     {/* <GLCurveText /> */}
     <GLCurvePicture />
     <G1 />
-    {/* <GLShaderCurvePicture /> */}
+    <GLShaderCurvePicture />
   </>,
   document.getElementById('app')
 );

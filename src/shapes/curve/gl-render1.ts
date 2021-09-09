@@ -83,7 +83,7 @@ export function initDrawingCurveImage(
   let updateCoords = false;
   return (xCount: number, yCount = xCount) => {
     const numberOfVertex = xCount * yCount * 6;
-    const pointIndices = new Uint8Array(numberOfVertex);
+    const pointIndices = new Uint32Array(numberOfVertex);
     const numberOfPoints = (xCount + 1) * (yCount + 1) * 2;
     const vertices = new Float32Array(numberOfPoints);
     const coords = new Float32Array(vertices);
@@ -95,7 +95,7 @@ export function initDrawingCurveImage(
       if (angle > 180 || angle < -180) {
         return;
       }
-      // console.time('draw gl');
+      console.time('draw gl1');
       // 弯曲角度为0则返回原始图片矩形区域的所有端点
       if (angle === 0) {
         updateRectangleVertices1(pa, pb, pd, vertices, xCount, yCount);
@@ -121,7 +121,7 @@ export function initDrawingCurveImage(
       }
       render?.(vertices, coords, pointIndices, updateCoords, numberOfVertex);
       updateCoords = false;
-      // console.timeEnd('draw gl');
+      console.timeEnd('draw gl1');
     };
   };
 }
@@ -134,6 +134,7 @@ export function initTextureRenderer(
   if (!gl) {
     return console.error('获取WebGL绘制上下文失败!');
   }
+  gl.getExtension('OES_element_index_uint')
   if (!initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE)) {
     return console.error('着色器初始化失败!');
   }
@@ -150,7 +151,7 @@ export function initTextureRenderer(
   return (
     vertices: Float32Array,
     texCoords: Float32Array,
-    pointIndices: Uint8Array,
+    pointIndices: Uint32Array,
     updateCoords: boolean,
     numberOfVertex: number
   ) => {
@@ -166,7 +167,7 @@ export function initTextureRenderer(
     }
 
     gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.drawElements(gl.TRIANGLES, numberOfVertex, gl.UNSIGNED_BYTE, 0);
+    gl.drawElements(gl.TRIANGLES, numberOfVertex, gl.UNSIGNED_INT, 0);
   };
 }
 

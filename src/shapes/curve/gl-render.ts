@@ -3,7 +3,6 @@ import {
   computeNDCEndPositions,
   genVerticesUpdater,
   updateRectangleVertices,
-  updateRectangleVertices1,
 } from '@/utils/gl-compute';
 import { handleCurvePoints } from './compute';
 import { getWebGLContext, initShaders } from '@/libs/cuon-utils';
@@ -86,25 +85,20 @@ export function initDrawingCurveImage(
     const numberOfVertex = xCount * yCount * 6;
     const vertices = new Float32Array(numberOfVertex * 2);
     const coords = new Float32Array(vertices);
-    const vertices1 = new Float32Array((xCount + 1) * (yCount +1) * 2);
-    const coords1 = new Float32Array(vertices1);
-    const vertices2 = new Float32Array((xCount + 1) * (yCount +1) * 2);
-    const coords2 = new Float32Array(vertices1);
-    const updater = genVerticesUpdater(vertices, vertices1, xCount, yCount);
-    updateRectangleVertices(tl, tr, bl, coords, coords1, xCount, yCount, flip);
-    updateRectangleVertices1(tl, tr, bl, coords2, xCount, yCount, flip)
+    const updater = genVerticesUpdater(vertices, xCount, yCount);
+    updateRectangleVertices(tl, tr, bl, coords, xCount, yCount, flip);
     updateCoords = true;
     return (angle: number) => {
       // 暂不考虑大于180°或小于-180°的情况
       if (angle > 180 || angle < -180) {
         return;
       }
-      // console.time('draw gl');
+      console.time('draw gl');
       // 弯曲角度为0则返回原始图片矩形区域的所有端点
       if (angle === 0) {
-        updateRectangleVertices(pa, pb, pd, vertices, vertices1, xCount, yCount);
+        updateRectangleVertices(pa, pb, pd, vertices, xCount, yCount);
       } else {
-        console.time('handleCurvePoints')
+        // console.time('handleCurvePoints')
         handleCurvePoints(
           pa,
           pb,
@@ -117,33 +111,11 @@ export function initDrawingCurveImage(
           -1,
           widthHeightRatio
         );
-        let index = 0
-        handleCurvePoints(
-          pa,
-          pb,
-          pc,
-          pd,
-          angle,
-          (x:number, y: number) => {
-            vertices2[index++] = x;
-            vertices2[index++] = y;
-          },
-          xCount,
-          yCount,
-          -1,
-          widthHeightRatio
-        );
-        console.timeEnd('handleCurvePoints')
+        // console.timeEnd('handleCurvePoints')
       }
-      for(let i=0;i<(xCount + 1) * (yCount +1) * 2;++i) {
-        if(vertices1[i] !== vertices2[i] || coords1[i] !== coords2[i]) {
-          console.log('&&&&&&&&>>>>>>')
-        }
-      }
-      console.log('>>>>', vertices1, vertices2)
       render?.(vertices, coords, updateCoords, numberOfVertex);
       updateCoords = false;
-      // console.timeEnd('draw gl');
+      console.timeEnd('draw gl');
     };
   };
 }
