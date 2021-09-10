@@ -1,6 +1,16 @@
 import { getWebGLContext, initShaders } from '@/libs/cuon-utils';
-import { computeNDCEndPositions, updateRectangleVertices } from '@/utils/gl-compute';
-import { bindArrayBuffer, initTexture } from '@/utils/gl-init';
+import {
+  computeNDCEndPositions,
+  updateVertexIndices,
+  updateRectanglePoints,
+  // batchUpdateRectanglePoints,
+} from '@/utils/gl-compute';
+import {
+  // batchBindArrayBuffer,
+  bindArrayBuffer,
+  initTexture,
+  updateBuffersData,
+} from '@/utils/gl-bind';
 import { computeCurveParams } from './compute';
 
 const VSHADER_SOURCE = `
@@ -46,7 +56,7 @@ void main() {
  * @param textRect 文本绘制的位置、尺寸
  * @returns 返回接收x/y方向分段数量参数的回调
  */
- export function initDrawingCurveText(
+export function initDrawingCurveText(
   cvs: HTMLCanvasElement,
   textPicture: HTMLImageElement | ImageBitmap,
   textRect: TextRect
@@ -90,25 +100,57 @@ export function initDrawingCurveImage(
       ctr = { x: xCount, y: 0 },
       cbl = { x: 0, y: yCount };
     const numberOfVertex = xCount * yCount * 6;
-    const posIndices = new Float32Array(numberOfVertex * 2);
+    // const posIndices = new Float32Array(numberOfVertex * 2);
+    // const vertices = new Float32Array(posIndices);
+    // const coords = new Float32Array(posIndices);
+
+    const numberOfPoints = (xCount + 1) * (yCount + 1) * 2;
+
+    const posIndices = new Float32Array(numberOfPoints);
     const vertices = new Float32Array(posIndices);
     const coords = new Float32Array(posIndices);
+
+    // const pointBounds = new Float32Array(numberOfPoints * 3);
+
+    const vertexIndices = new Uint32Array(numberOfVertex);
+
     // console.time('updateRectangleVertices 1');
-    updateRectangleVertices(pa, pb, pd, vertices, xCount, yCount);
+    updateRectanglePoints(pa, pb, pd, vertices, xCount, yCount); // vertices
     // console.timeEnd('updateRectangleVertices 1');
     // console.time('updateRectangleVertices 2');
-    updateRectangleVertices(tl, tr, bl, coords, xCount, yCount, flip);
+    updateRectanglePoints(tl, tr, bl, coords, xCount, yCount, flip); // coords
     // console.timeEnd('updateRectangleVertices 2');
     // console.time('updateRectangleVertices 3');
-    updateRectangleVertices(ctl, ctr, cbl, posIndices, xCount, yCount);
+    updateRectanglePoints(ctl, ctr, cbl, posIndices, xCount, yCount); // posIndices
     // console.timeEnd('updateRectangleVertices 3');
-    const render = renderGenerator(vertices, posIndices, coords, numberOfVertex);
+
+    // console.time('updateRectangleVertices 1');
+    // batchUpdateRectanglePoints(pa, pb, pd, pointBounds, xCount, {yCount, batchNum: 6}); // vertices
+    // console.timeEnd('updateRectangleVertices 1');
+    // console.time('updateRectangleVertices 2');
+    // batchUpdateRectanglePoints(tl, tr, bl, pointBounds, xCount, {yCount, flip, batchNum:6, offset:2}); // coords
+    // console.timeEnd('updateRectangleVertices 2');
+    // console.time('updateRectangleVertices 3');
+    // batchUpdateRectanglePoints(ctl, ctr, cbl, pointBounds, xCount, {yCount, batchNum:6, offset:4}); // posIndices
+    // console.timeEnd('updateRectangleVertices 3');
+
+    updateVertexIndices(vertexIndices, xCount, yCount);
+    const render = renderGenerator(
+      vertices,
+      coords,
+      posIndices,
+
+      // pointBounds,
+
+      vertexIndices,
+      numberOfVertex
+    );
     return (angle: number) => {
       // 暂不考虑大于180°或小于-180°的情况
       if (angle > 180 || angle < -180) {
         return;
       }
-      // console.time('draw gl1');
+      console.time('draw gl shader');
       // console.time('compute params');
       const { upRadius, radiusDelta, center, fromAngle, angleStep, curveDir } =
         computeCurveParams(
@@ -124,7 +166,7 @@ export function initDrawingCurveImage(
         );
       // console.timeEnd('compute params');
       // console.time('drawing');
-      render(
+      render?.(
         upRadius,
         radiusDelta,
         center,
@@ -135,7 +177,7 @@ export function initDrawingCurveImage(
         angle === 0
       );
       // console.timeEnd('drawing');
-      // console.timeEnd('draw gl1');
+      console.timeEnd('draw gl shader');
     };
   };
 }
@@ -148,17 +190,17 @@ function initTextureRendererGenerator(
   if (!gl) {
     return console.error('获取WebGL绘制上下文失败!');
   }
+
   if (!initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE)) {
     return console.error('着色器初始化失败!');
   }
 
-  if (!initTexture(gl, image)) {
-    return console.error('纹理初始化失败!');
+  if (!gl.getExtension('OES_element_index_uint')) {
+    return console.error('您的浏览器具有收藏价值!');
   }
 
-  const initBufferResult = initVerticesAndCoordsBuffer(gl);
-  if (!initBufferResult) {
-    return console.error('初始化缓冲区对象失败!');
+  if (!initTexture(gl, image)) {
+    return console.error('纹理初始化失败!');
   }
 
   const updateStaticParams = initStaticParams(gl);
@@ -168,17 +210,40 @@ function initTextureRendererGenerator(
 
   return (
     vertices: Float32Array,
+    coords: Float32Array,
     posIndices: Float32Array,
-    texCoords: Float32Array,
+
+    // pointBounds: Float32Array,
+
+    vertexIndices: Uint32Array,
     numberOfVertex: number
   ) => {
-    const { verticesBuffer, posIndicesBuffer, coordsBuffer } = initBufferResult;
-    gl.bindBuffer(gl.ARRAY_BUFFER, verticesBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.DYNAMIC_DRAW);
-    gl.bindBuffer(gl.ARRAY_BUFFER, posIndicesBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, posIndices, gl.DYNAMIC_DRAW);
-    gl.bindBuffer(gl.ARRAY_BUFFER, coordsBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, texCoords, gl.DYNAMIC_DRAW);
+    // 重新创建缓冲对象，以触发浏览器垃圾回收
+    const initBufferResult = initVerticesAndCoordsBuffer(gl);
+    if (!initBufferResult) {
+      return console.error('初始化缓冲区对象失败!');
+    }
+
+    const {
+      verticesBuffer,
+      coordsBuffer,
+      posIndicesBuffer,
+
+      // pointBoundsBuffer,
+
+      vertexIndicesBuffer,
+    } = initBufferResult;
+    updateBuffersData(
+      gl,
+      [verticesBuffer, coordsBuffer, posIndicesBuffer],
+      [vertices, coords, posIndices]
+    );
+
+    // gl.bindBuffer(gl.ARRAY_BUFFER, pointBoundsBuffer);
+    // gl.bufferData(gl.ARRAY_BUFFER, pointBounds, gl.DYNAMIC_DRAW);
+
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, vertexIndicesBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, vertexIndices, gl.DYNAMIC_DRAW);
 
     return (...args: Parameters<typeof updateStaticParams>) => {
       // console.time('update params');
@@ -187,7 +252,8 @@ function initTextureRendererGenerator(
 
       // console.time('gl draw');
       gl.clear(gl.COLOR_BUFFER_BIT);
-      gl.drawArrays(gl.TRIANGLES, 0, numberOfVertex);
+      // gl.drawArrays(gl.TRIANGLES, 0, numberOfVertex);
+      gl.drawElements(gl.TRIANGLES, numberOfVertex, gl.UNSIGNED_INT, 0);
       // console.timeEnd('gl draw');
     };
   };
@@ -247,15 +313,46 @@ function initVerticesAndCoordsBuffer(gl: WebGLRenderingContext) {
     return null;
   }
   const verticesBuffer = gl.createBuffer(),
+    coordsBuffer = gl.createBuffer(),
     posIndicesBuffer = gl.createBuffer(),
-    coordsBuffer = gl.createBuffer();
-  if (!verticesBuffer || !posIndicesBuffer || !coordsBuffer) {
+    vertexIndicesBuffer = gl.createBuffer();
+  if (
+    !verticesBuffer ||
+    !coordsBuffer ||
+    !posIndicesBuffer ||
+    !vertexIndicesBuffer
+  ) {
     console.error('创建缓冲区对象失败!');
     return null;
   }
+
+  // const pointBoundsBuffer = gl.createBuffer(),
+  //   vertexIndicesBuffer = gl.createBuffer();
+  // if (
+  //   !pointBoundsBuffer ||
+  //   !vertexIndicesBuffer
+  // ) {
+  //   console.error('创建缓冲区对象失败!');
+  //   return null;
+  // }
+
   bindArrayBuffer(gl, verticesBuffer, aPosition);
   bindArrayBuffer(gl, posIndicesBuffer, aPosIndices);
   bindArrayBuffer(gl, coordsBuffer, aTexCoord);
 
-  return { verticesBuffer, posIndicesBuffer, coordsBuffer };
+  // batchBindArrayBuffer(gl, pointBoundsBuffer, [
+  //   aPosition,
+  //   aTexCoord,
+  //   aPosIndices,
+  // ]);
+
+  return {
+    verticesBuffer,
+    coordsBuffer,
+    posIndicesBuffer,
+
+    // pointBoundsBuffer,
+
+    vertexIndicesBuffer,
+  };
 }

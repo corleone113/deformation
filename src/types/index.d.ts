@@ -49,6 +49,13 @@ interface TextRect {
   height: number;
 }
 
+interface UpdatePointsOptionalParams {
+  yCount?:number,
+  flip?: boolean,
+  batchNum?: number,
+  offset?: number,
+}
+
 type FunctionKeys<T> = {
   [P in keyof T]: T[P] extends Function ? P : never;
 }[keyof T];

@@ -9,6 +9,37 @@ export function bindArrayBuffer(
   gl.enableVertexAttribArray(attrib);
 }
 
+export function updateBuffersData(gl: WebGLRenderingContext, buffers: WebGLBuffer[], dataArray: Float32Array[]) {
+  for(let i=0;i<buffers.length;++i){
+    const buf = buffers[i];
+    const data = dataArray[i]
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf)
+    gl.bufferData(gl.ARRAY_BUFFER, data, gl.DYNAMIC_DRAW);
+  }
+}
+
+export function batchBindArrayBuffer(
+  gl: WebGLRenderingContext,
+  buffer: WebGLBuffer,
+  attribs: number[],
+  pointNum = 2,
+  perSize = Float32Array.BYTES_PER_ELEMENT
+) {
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  for (let i = 0; i < attribs.length; ++i) {
+    const attrib = attribs[i];
+    gl.vertexAttribPointer(
+      attrib,
+      pointNum,
+      gl.FLOAT,
+      false,
+      attribs.length * pointNum * perSize,
+      i * pointNum * perSize
+    );
+    gl.enableVertexAttribArray(attrib);
+  }
+}
+
 export function initTexture(gl: WebGLRenderingContext, image: TexImageSource) {
   const texture = gl.createTexture();
   if (!texture) {

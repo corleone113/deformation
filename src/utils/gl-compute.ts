@@ -182,14 +182,14 @@ export function updateRectangleVertices(
   }
 }
 
-export function updateRectangleVertices1(
+export function updateRectanglePoints(
   pa: Point2D,
   pb: Point2D,
   pd: Point2D,
   vertices: Float32Array,
   xCount: number,
   yCount = xCount,
-  flip = false
+  flip = false,
 ) {
   const { x, y } = pa;
   const yStep = (pd.y - pa.y) / yCount;
@@ -208,8 +208,40 @@ export function updateRectangleVertices1(
   }
 }
 
-export function updatePointIndices(
-  pointIndices: Uint32Array,
+export function batchUpdateRectanglePoints(
+  pa: Point2D,
+  pb: Point2D,
+  pd: Point2D,
+  vertices: Float32Array,
+  xCount: number,
+  {
+    yCount = xCount,
+    batchNum = 2,
+    offset = 0,
+    flip = false,
+  }: UpdatePointsOptionalParams
+) {
+  const { x, y } = pa;
+  const yStep = (pd.y - pa.y) / yCount;
+  const xStep = (pb.x - pa.x) / xCount;
+  let endYIndex = flip ? -1 : yCount + 1,
+    yIndexDelta = flip ? -1 : 1,
+    index = 0;
+  for (let i = flip ? yCount : 0; i !== endYIndex; i += yIndexDelta) {
+    for (let j = 0; j <= xCount; ++j) {
+      const pX = x + j * xStep;
+      const pY = y + i * yStep;
+
+      const xIndex = index * batchNum + offset;
+      vertices[xIndex] = pX;
+      vertices[xIndex + 1] = pY;
+      ++index;
+    }
+  }
+}
+
+export function updateVertexIndices(
+  vertexIndices: Uint32Array,
   xCount: number,
   yCount = xCount
 ) {
@@ -221,13 +253,13 @@ export function updatePointIndices(
       const p3 = p2 + xCount;
       const p4 = p3 + 1;
 
-      pointIndices[index++] = p1;
-      pointIndices[index++] = p2;
-      pointIndices[index++] = p3;
+      vertexIndices[index++] = p1;
+      vertexIndices[index++] = p2;
+      vertexIndices[index++] = p3;
 
-      pointIndices[index++] = p2;
-      pointIndices[index++] = p3;
-      pointIndices[index++] = p4;
+      vertexIndices[index++] = p2;
+      vertexIndices[index++] = p3;
+      vertexIndices[index++] = p4;
     }
   }
 }

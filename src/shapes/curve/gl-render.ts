@@ -1,8 +1,8 @@
-import { bindArrayBuffer, initTexture } from '@/utils/gl-init';
+import { bindArrayBuffer, initTexture } from '@/utils/gl-bind';
 import {
   computeNDCEndPositions,
-  genVerticesUpdater,
-  updateRectangleVertices,
+  updateVertexIndices,
+  updateRectanglePoints,
 } from '@/utils/gl-compute';
 import { handleCurvePoints } from './compute';
 import { getWebGLContext, initShaders } from '@/libs/cuon-utils';
@@ -79,33 +79,38 @@ export function initDrawingCurveImage(
     bl = { x: 0, y: 0 };
   const widthHeightRatio = cvs.width / cvs.height;
   // 初始化gl绘制上下文,生成一个接收顶点数据和纹理坐标数据的绘制回调
-  const render = initTextureRenderer(cvs, img);
-  let updateCoords = false;
+  const renderGenerator = initTextureRenderer(cvs, img);
   return (xCount: number, yCount = xCount) => {
     const numberOfVertex = xCount * yCount * 6;
-    const vertices = new Float32Array(numberOfVertex * 2);
+    const pointIndices = new Uint32Array(numberOfVertex);
+    const numberOfPoints = (xCount + 1) * (yCount + 1) * 2;
+    const vertices = new Float32Array(numberOfPoints);
     const coords = new Float32Array(vertices);
-    const updater = genVerticesUpdater(vertices, xCount, yCount);
-    updateRectangleVertices(tl, tr, bl, coords, xCount, yCount, flip);
-    updateCoords = true;
+    updateRectanglePoints(tl, tr, bl, coords, xCount, yCount, flip);
+    updateVertexIndices(pointIndices, xCount, yCount);
+    const render = renderGenerator?.(pointIndices, coords, numberOfVertex);
     return (angle: number) => {
       // 暂不考虑大于180°或小于-180°的情况
       if (angle > 180 || angle < -180) {
         return;
       }
-      console.time('draw gl');
+      // console.time('draw gl1');
       // 弯曲角度为0则返回原始图片矩形区域的所有端点
       if (angle === 0) {
-        updateRectangleVertices(pa, pb, pd, vertices, xCount, yCount);
+        updateRectanglePoints(pa, pb, pd, vertices, xCount, yCount);
       } else {
         // console.time('handleCurvePoints')
+        let index = 0;
         handleCurvePoints(
           pa,
           pb,
           pc,
           pd,
           angle,
-          updater,
+          (x: number, y: number) => {
+            vertices[index++] = x;
+            vertices[index++] = y;
+          },
           xCount,
           yCount,
           -1,
@@ -113,9 +118,8 @@ export function initDrawingCurveImage(
         );
         // console.timeEnd('handleCurvePoints')
       }
-      render?.(vertices, coords, updateCoords, numberOfVertex);
-      updateCoords = false;
-      console.timeEnd('draw gl');
+      render?.(vertices);
+      // console.timeEnd('draw gl1');
     };
   };
 }
@@ -128,6 +132,11 @@ export function initTextureRenderer(
   if (!gl) {
     return console.error('获取WebGL绘制上下文失败!');
   }
+
+  if (!gl.getExtension('OES_element_index_uint')) {
+    return console.error('您的浏览器具有收藏价值!');
+  }
+
   if (!initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE)) {
     return console.error('着色器初始化失败!');
   }
@@ -136,27 +145,30 @@ export function initTextureRenderer(
     return console.error('纹理初始化失败!');
   }
 
-  const initBufferResult = initVerticesAndCoordsBuffer(gl);
-  if (!initBufferResult) {
-    return console.error('初始化缓冲区对象失败!');
-  }
-
   return (
-    vertices: Float32Array,
+    pointIndices: Uint32Array,
     texCoords: Float32Array,
-    updateCoords: boolean,
     numberOfVertex: number
   ) => {
-    const { verticesBuffer, coordsBuffer } = initBufferResult;
-    gl.bindBuffer(gl.ARRAY_BUFFER, verticesBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.DYNAMIC_DRAW);
-    if (updateCoords) {
-      gl.bindBuffer(gl.ARRAY_BUFFER, coordsBuffer);
-      gl.bufferData(gl.ARRAY_BUFFER, texCoords, gl.DYNAMIC_DRAW);
+    // 重新创建缓冲对象，以触发浏览器垃圾回收
+    const initBufferResult = initVerticesAndCoordsBuffer(gl);
+    if (!initBufferResult) {
+      return console.error('初始化缓冲区对象失败!');
     }
+    const { verticesBuffer, coordsBuffer, indexBuffer } = initBufferResult;
+    gl.bindBuffer(gl.ARRAY_BUFFER, coordsBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, texCoords, gl.DYNAMIC_DRAW);
 
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.drawArrays(gl.TRIANGLES, 0, numberOfVertex);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, pointIndices, gl.DYNAMIC_DRAW);
+
+    return (vertices: Float32Array) => {
+      gl.bindBuffer(gl.ARRAY_BUFFER, verticesBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.DYNAMIC_DRAW);
+
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.drawElements(gl.TRIANGLES, numberOfVertex, gl.UNSIGNED_INT, 0);
+    };
   };
 }
 
@@ -168,13 +180,14 @@ function initVerticesAndCoordsBuffer(gl: WebGLRenderingContext) {
     return null;
   }
   const verticesBuffer = gl.createBuffer(),
-    coordsBuffer = gl.createBuffer();
-  if (!verticesBuffer || !coordsBuffer) {
+    coordsBuffer = gl.createBuffer(),
+    indexBuffer = gl.createBuffer();
+  if (!verticesBuffer || !coordsBuffer || !indexBuffer) {
     console.error('创建缓冲区对象失败!');
     return null;
   }
   bindArrayBuffer(gl, verticesBuffer, aPosition);
   bindArrayBuffer(gl, coordsBuffer, aTexCoord);
 
-  return { verticesBuffer, coordsBuffer };
+  return { verticesBuffer, coordsBuffer, indexBuffer };
 }
