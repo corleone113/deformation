@@ -159,13 +159,13 @@ function computeCurveEndPoints(
     stepY = vectorY / stepCount;
   // 计算边上顶点时的起点，是变形时固定(角度符号未变化时)的点，也是旋转围绕的点
   const startPoint = isOpposite ? p1 : p2;
-  const endPoints: Point2D[] = [];
+  const endPoints: Point2D[] = Array(stepCount + 1);
   // 计算出所有的顶点
   for (let i = 0; i <= stepCount; ++i) {
-    endPoints.push({
+    endPoints[i] = {
       x: startPoint.x + i * stepX,
       y: startPoint.y + i * stepY,
-    });
+    };
   }
   // 顶点的顺序是相反需要倒序，如果是反向弯曲则不需要倒序
   return isOpposite ? endPoints : endPoints.reverse();

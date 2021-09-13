@@ -149,8 +149,7 @@ export function updateRectangleVertices(
   const xStep = (pb.x - pa.x) / xCount;
   let endYIndex = flip ? -1 : yCount + 1,
     yIndexDelta = flip ? -1 : 1,
-    index = 0,
-    index1 = 0;
+    index = 0;
   for (let i = flip ? yCount : 0; i !== endYIndex; i += yIndexDelta) {
     for (let j = 0; j <= xCount; ++j) {
       if (i != endYIndex - yIndexDelta && j < xCount) {
@@ -182,6 +181,16 @@ export function updateRectangleVertices(
   }
 }
 
+/**
+ * 根据传入的矩形区域的三个顶点数据计算出分段后所有顶点数据并保存到类型化数组中(此函数保存的顶点数据用于drawElements绘制)
+ * @param pa 左上顶点
+ * @param pb 右上顶点
+ * @param pd 左下顶点
+ * @param vertices 保存顶点数据的类型数组
+ * @param xCount 水平方向分段数量
+ * @param yCount 垂直方向分段数量
+ * @param flip 是否翻转y轴
+ */
 export function updateRectanglePoints(
   pa: Point2D,
   pb: Point2D,
@@ -240,6 +249,12 @@ export function batchUpdateRectanglePoints(
   }
 }
 
+/**
+ * 计算顶点索引数据并保存到传入的类型化数组中
+ * @param vertexIndices 索引数组
+ * @param xCount 水平分段数量
+ * @param yCount 垂直分段数量
+ */
 export function updateVertexIndices(
   vertexIndices: Uint32Array,
   xCount: number,
@@ -248,15 +263,18 @@ export function updateVertexIndices(
   let index = 0;
   for (let i = 0; i < yCount; ++i) {
     for (let j = 0; j < xCount; ++j) {
+      // 四个顶点的索引，依次是左上、右上、左下、右下
       const p1 = i * (xCount + 1) + j;
       const p2 = p1 + 1;
       const p3 = p2 + xCount;
       const p4 = p3 + 1;
 
+      // 保存左上三角形三个顶点的索引值
       vertexIndices[index++] = p1;
       vertexIndices[index++] = p2;
       vertexIndices[index++] = p3;
 
+      // 保存右下三角形三个顶点的索引值
       vertexIndices[index++] = p2;
       vertexIndices[index++] = p3;
       vertexIndices[index++] = p4;
