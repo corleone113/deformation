@@ -3,10 +3,8 @@ import {
   computeNDCEndPositions,
   updateVertexIndices,
   updateRectanglePoints,
-  // batchUpdateRectanglePoints,
 } from '@/utils/gl-compute';
 import {
-  // batchBindArrayBuffer,
   bindArrayBuffer,
   initTexture,
   updateBuffersData,
@@ -100,38 +98,20 @@ export function initDrawingCurveImage(
       ctr = { x: xCount, y: 0 },
       cbl = { x: 0, y: yCount };
     const numberOfVertex = xCount * yCount * 6;
-    // const posIndices = new Float32Array(numberOfVertex * 2);
-    // const vertices = new Float32Array(posIndices);
-    // const coords = new Float32Array(posIndices);
-
     const numberOfPoints = (xCount + 1) * (yCount + 1) * 2;
-
     const posIndices = new Float32Array(numberOfPoints);
     const vertices = new Float32Array(posIndices);
     const coords = new Float32Array(posIndices);
-
-    // const pointBounds = new Float32Array(numberOfPoints * 3);
-
     const vertexIndices = new Uint32Array(numberOfVertex);
 
     // console.time('updateRectangleVertices 1');
-    updateRectanglePoints(pa, pb, pd, vertices, xCount, yCount); // vertices
+    updateRectanglePoints(pa, pb, pd, vertices, xCount, yCount);
     // console.timeEnd('updateRectangleVertices 1');
     // console.time('updateRectangleVertices 2');
-    updateRectanglePoints(tl, tr, bl, coords, xCount, yCount, flip); // coords
+    updateRectanglePoints(tl, tr, bl, coords, xCount, yCount, flip);
     // console.timeEnd('updateRectangleVertices 2');
     // console.time('updateRectangleVertices 3');
-    updateRectanglePoints(ctl, ctr, cbl, posIndices, xCount, yCount); // posIndices
-    // console.timeEnd('updateRectangleVertices 3');
-
-    // console.time('updateRectangleVertices 1');
-    // batchUpdateRectanglePoints(pa, pb, pd, pointBounds, xCount, {yCount, batchNum: 6}); // vertices
-    // console.timeEnd('updateRectangleVertices 1');
-    // console.time('updateRectangleVertices 2');
-    // batchUpdateRectanglePoints(tl, tr, bl, pointBounds, xCount, {yCount, flip, batchNum:6, offset:2}); // coords
-    // console.timeEnd('updateRectangleVertices 2');
-    // console.time('updateRectangleVertices 3');
-    // batchUpdateRectanglePoints(ctl, ctr, cbl, pointBounds, xCount, {yCount, batchNum:6, offset:4}); // posIndices
+    updateRectanglePoints(ctl, ctr, cbl, posIndices, xCount, yCount);
     // console.timeEnd('updateRectangleVertices 3');
 
     updateVertexIndices(vertexIndices, xCount, yCount);
@@ -139,9 +119,6 @@ export function initDrawingCurveImage(
       vertices,
       coords,
       posIndices,
-
-      // pointBounds,
-
       vertexIndices,
       numberOfVertex
     );
@@ -212,9 +189,6 @@ function initTextureRendererGenerator(
     vertices: Float32Array,
     coords: Float32Array,
     posIndices: Float32Array,
-
-    // pointBounds: Float32Array,
-
     vertexIndices: Uint32Array,
     numberOfVertex: number
   ) => {
@@ -228,9 +202,6 @@ function initTextureRendererGenerator(
       verticesBuffer,
       coordsBuffer,
       posIndicesBuffer,
-
-      // pointBoundsBuffer,
-
       vertexIndicesBuffer,
     } = initBufferResult;
     updateBuffersData(
@@ -238,9 +209,6 @@ function initTextureRendererGenerator(
       [verticesBuffer, coordsBuffer, posIndicesBuffer],
       [vertices, coords, posIndices]
     );
-
-    // gl.bindBuffer(gl.ARRAY_BUFFER, pointBoundsBuffer);
-    // gl.bufferData(gl.ARRAY_BUFFER, pointBounds, gl.DYNAMIC_DRAW);
 
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, vertexIndicesBuffer);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, vertexIndices, gl.DYNAMIC_DRAW);
@@ -252,7 +220,6 @@ function initTextureRendererGenerator(
 
       // console.time('gl draw');
       gl.clear(gl.COLOR_BUFFER_BIT);
-      // gl.drawArrays(gl.TRIANGLES, 0, numberOfVertex);
       gl.drawElements(gl.TRIANGLES, numberOfVertex, gl.UNSIGNED_INT, 0);
       // console.timeEnd('gl draw');
     };
@@ -326,33 +293,14 @@ function initVerticesAndCoordsBuffer(gl: WebGLRenderingContext) {
     return null;
   }
 
-  // const pointBoundsBuffer = gl.createBuffer(),
-  //   vertexIndicesBuffer = gl.createBuffer();
-  // if (
-  //   !pointBoundsBuffer ||
-  //   !vertexIndicesBuffer
-  // ) {
-  //   console.error('创建缓冲区对象失败!');
-  //   return null;
-  // }
-
   bindArrayBuffer(gl, verticesBuffer, aPosition);
   bindArrayBuffer(gl, posIndicesBuffer, aPosIndices);
   bindArrayBuffer(gl, coordsBuffer, aTexCoord);
-
-  // batchBindArrayBuffer(gl, pointBoundsBuffer, [
-  //   aPosition,
-  //   aTexCoord,
-  //   aPosIndices,
-  // ]);
 
   return {
     verticesBuffer,
     coordsBuffer,
     posIndicesBuffer,
-
-    // pointBoundsBuffer,
-
     vertexIndicesBuffer,
   };
 }

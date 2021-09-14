@@ -12,7 +12,7 @@ const { PI, hypot, tan, atan2, cos, sin, sign } = Math;
  * @param angle 弯曲角度
  * @param xCount 水平分段数量
  * @param yCount 垂直分段数量
- * @param yDir y轴方向——1表示向下，-1则相反
+ * @param yDir +y轴方向——1表示向下，-1则相反
  * @param widthHeightRatio 画布宽高比
  * @returns 弯曲后图片上的顶点数组
  */
@@ -63,7 +63,7 @@ export function computeCurvePoints(
  * @param pointCallback 使用顶点数据的回调
  * @param xCount 水平方向的分段数量
  * @param yCount 垂直方向的分段数量
- * @param yDir y轴方向——1表示向下，-1则相反
+ * @param yDir +y轴方向——1表示向下，-1则相反
  * @param widthHeightRatio 画布宽高比
  */
 export function handleCurvePoints(
@@ -132,7 +132,7 @@ export function handleCurvePoints(
  * @param p2 顶点p1下方的顶点
  * @param angle 弯曲角度
  * @param stepCount 分段数量
- * @param yDir y轴方向——1表示向下，-1则相反
+ * @param yDir +y轴方向——1表示向下，-1则相反
  * @param widthHeightRatio 画布的宽高比
  * @returns 该边弯曲(旋转)后的顶点数组
  */
@@ -177,7 +177,7 @@ function computeCurveEndPoints(
  * @param p2 圆弧的右端点
  * @param angle 弯曲角度(圆弧角度)
  * @param stepCount 分段数量
- * @param yDir y轴方向——1表示向下，-1则相反
+ * @param yDir +y轴方向——1表示向下，-1则相反
  * @param widthHeightRatio 画布宽高比
  * @param curveDir 圆弧弯曲的方向，1表示向上弯曲，-1则相反
  * @param offsetRad 左右端点组成的向量相对于+x轴的角度
@@ -223,7 +223,7 @@ function handlePointsOnArc(
  * @param p1 圆弧的一个端点
  * @param p2 圆弧的另一个端点
  * @param angle 圆弧角度
- * @param yDir +y轴方向——1表示向下，-1则相反
+ * @param yDir ++y轴方向——1表示向下，-1则相反
  * @param widthHeightRatio 宽高比
  * @param offsetRad 两端点连线相对于水平方向的偏移角度
  * @returns 圆弧相关参数
@@ -264,7 +264,7 @@ function computeArcParams(
  * @param p2 圆弧右/下端点
  * @param angle 弯曲的角度
  * @param stepCount 分段数量
- * @param yDir y轴方向——1表示向下，-1则相反
+ * @param yDir +y轴方向——1表示向下，-1则相反
  * @param widthHeightRatio 画布宽高比
  * @returns 返回角度相关的参数
  */
@@ -305,7 +305,7 @@ function computeAngleParams(
  * @param angle 弯曲的角度
  * @param xCount 水平方向分段数量
  * @param yCount 垂直方向分段数量
- * @param yDir +y轴方向——1表示向下，-1则相反
+ * @param yDir ++y轴方向——1表示向下，-1则相反
  * @param widthHeightRatio 宽高比
  * @returns 求圆弧上顶点所需的参数
  */
@@ -380,7 +380,7 @@ export function computeCurveParams(
  * @param p1 第一个点
  * @param p2 第二个点
  * @param angle 旋转角度
- * @param yDir y轴方向——1表示向下，-1则相反
+ * @param yDir +y轴方向——1表示向下，-1则相反
  * @param widthHeightRatio 宽高比
  * @returns 旋转后的向量
  */
