@@ -83,3 +83,11 @@ type PointCallback = (
   xIndex: number,
   yIndex: number
 ) => void;
+
+declare module '*.vs' {
+  export default source
+}
+
+declare module '*.fs' {
+  export default source
+}

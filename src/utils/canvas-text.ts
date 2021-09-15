@@ -24,12 +24,12 @@ export function computeTextRect(
 }
 
 /**
- * 生成渲染后的文本的图片——因为canvas渲染文本的成本较高(性能较差)，且webgl没有渲染文本的api，所以需要这个函数才将文本转化为图片
+ * 生成渲染后的文本的图像——因为canvas渲染文本的成本较高(性能较差)，且webgl没有渲染文本的api，所以需要这个函数才将文本转化为图像
  * @param ctx canvas 2d绘制上下文
  * @param targetCtx 待拷贝的2d绘制上下文——实际进行绘制的画布的2d上下文。
  * @param text 文本的内容
  * @param rect 文本渲染的位置、尺寸
- * @returns 生成的图片的bitmap的promise对象
+ * @returns 生成的图像的bitmap的promise对象
  */
 export function genTextPicture(
   ctx: CanvasRenderingContext2D,

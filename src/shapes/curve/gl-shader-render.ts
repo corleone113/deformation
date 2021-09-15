@@ -11,46 +11,13 @@ import {
 } from '@/utils/gl-bind';
 import { computeCurveParams } from './compute';
 
-const VSHADER_SOURCE = `
-uniform float u_UpRadius;
-uniform float u_RadiusDelta;
-uniform vec2 u_Center;
-uniform float u_FromAngle;
-uniform float u_AngleStep;
-uniform float u_CurveDir;
-uniform float u_WidthHeightRatio;
-uniform bool u_UsePos;
-attribute vec4 a_Position;
-attribute vec2 a_PosIndices;
-attribute vec2 a_TexCoord;
-varying vec2 v_TexCoord;
-void main() {
-  if (u_UsePos) {
-    gl_Position = a_Position;
-  } else {
-    float radius = u_UpRadius - a_PosIndices.y * u_RadiusDelta;
-    float angle = u_FromAngle + a_PosIndices.x * u_AngleStep;
-    float x = u_Center.x + radius * sin(angle);
-    float y = (u_Center.y + radius * cos(angle) * u_CurveDir) * u_WidthHeightRatio;
-    gl_Position = vec4(x, y, 0, 1);
-  }
-  v_TexCoord = a_TexCoord;
-}
-`;
-const FSHADER_SOURCE = `
-precision highp float;
-uniform sampler2D u_Sampler;
-varying vec2 v_TexCoord;
-void main() {
-    vec4 color = texture2D(u_Sampler, v_TexCoord);
-    gl_FragColor = color;
-}
-`;
+import VSHADER_SOURCE from './compute-curve-vertex.vs'
+import FSHADER_SOURCE from './render-texture.fs'
 
 /**
- * 初始化绘制弯曲变形的图片的上下文并生成绘制回调
+ * 初始化绘制弯曲变形的图像的上下文并生成绘制回调
  * @param cvs 画布DOM
- * @param textPicture 文本图片资源
+ * @param textPicture 文本图像资源
  * @param textRect 文本绘制的位置、尺寸
  * @returns 返回接收x/y方向分段数量参数的回调
  */

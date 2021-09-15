@@ -12,7 +12,7 @@ import {
  * @param angle 弯曲的角度
  * @param xCount 水平方向分段数量
  * @param yCount 垂直方向分段数量
- * @param textPicture 绘制的文本的图片
+ * @param textPicture 绘制的文本的图像
  * @param textRect 绘制的位置、尺寸
  */
 export function drawCurveText(
@@ -45,18 +45,18 @@ export function drawCurveText(
 }
 
 /**
- * 绘制弯曲后的图片
+ * 绘制弯曲后的图像
  * @param ctx canvas 2d绘制上下文
- * @param pa 图片矩形的左上顶点
- * @param pb 图片矩形的右上顶点
- * @param pc 图片矩形的右下顶点
- * @param pd 图片矩形的左下顶点
+ * @param pa 图像矩形的左上顶点
+ * @param pb 图像矩形的右上顶点
+ * @param pc 图像矩形的右下顶点
+ * @param pd 图像矩形的左下顶点
  * @param angle 弯曲的角度
  * @param xCount 水平方向分段数量
- * @param img 原始图片资源
+ * @param img 原始图像资源
  * @param hasDot 是否绘制顶点
  * @param hasLine 是否绘制划分后的三角形的边
- * @param hasPic 是否绘制图片
+ * @param hasPic 是否绘制图像
  * @param yCount 垂直方向分段数量
  */
 export function drawCurveImage(
@@ -74,9 +74,9 @@ export function drawCurveImage(
   yCount = xCount
 ) {
   console.time('render time')
-  // 弯曲的图片的所有顶点
+  // 弯曲的图像的所有顶点
   const originalPoints = computeOriginalPoints(pa, pb, pc, pd, xCount, yCount);
-  // 弯曲后的图片的所有顶点
+  // 弯曲后的图像的所有顶点
   const curvePoints = computeCurvePoints(pa, pb, pc, pd, angle, xCount, yCount);
 
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -151,9 +151,9 @@ export function drawCurveImage_Deprecated(
   hasPic = true,
   yCount = xCount
 ) {
-  // 弯曲的图片的所有顶点
+  // 弯曲的图像的所有顶点
   const originalPoints = computeOriginalPoints(pa, pb, pc, pd, xCount, yCount);
-  // 弯曲后的图片的所有顶点
+  // 弯曲后的图像的所有顶点
   const curvePoints = computeCurvePoints(pa, pb, pc, pd, angle, xCount, yCount);
 
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -205,14 +205,14 @@ export function drawCurveImage_Deprecated(
 }
 
 /**
- * 绘制弯曲后的图片的某个裁剪区域
+ * 绘制弯曲后的图像的某个裁剪区域
  * @param ctx canvas 2d绘制上下文
  * @param matrix 2d模型变换矩阵
  * @param points 路径顶点数组
  * @param startPoint 路径起始顶点
- * @param img 原始图片源
+ * @param img 原始图像源
  * @param hasLine 是否绘制划分后的三角形的边
- * @param hasPic 是否绘制图片
+ * @param hasPic 是否绘制图像
  */
 function renderClipImage(
   ctx: CanvasRenderingContext2D,
@@ -243,7 +243,7 @@ function renderClipImage(
   if (hasPic) {
     //变形
     ctx.transform(...matrix);
-    //绘制图片
+    //绘制图像
     ctx.drawImage(img, startPoint.x, startPoint.y, img.width, img.height);
   }
 

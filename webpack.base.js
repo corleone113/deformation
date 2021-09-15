@@ -45,7 +45,15 @@ module.exports = {
 					],
 				},
 			}, ],
-		}, ],
+		}, 
+	{
+		test: /\.(glsl|vs|fs)$/,
+		exclude: /node_modules/,
+		use: [
+			'raw-loader',
+			'glslify-loader'
+		]
+	}],
 	},
 	devServer: {
 		port: 34461,

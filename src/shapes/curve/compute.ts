@@ -4,17 +4,17 @@ import { addPoint2D, angleToRadian } from '@/utils/math';
 const { PI, hypot, tan, atan2, cos, sin, sign } = Math;
 
 /**
- * 求矩形弯曲后的图片区域的所有顶点
- * @param pa 原始图片矩形区域左上顶点坐标
- * @param pb 原始图片矩形区域右上顶点坐标
- * @param pc 原始图片矩形区域右下顶点坐标
- * @param pd 原始图片矩形区域左下顶点坐标
+ * 求矩形弯曲后的图像区域的所有顶点
+ * @param pa 原始图像矩形区域左上顶点坐标
+ * @param pb 原始图像矩形区域右上顶点坐标
+ * @param pc 原始图像矩形区域右下顶点坐标
+ * @param pd 原始图像矩形区域左下顶点坐标
  * @param angle 弯曲角度
  * @param xCount 水平分段数量
  * @param yCount 垂直分段数量
  * @param yDir +y轴方向——1表示向下，-1则相反
  * @param widthHeightRatio 画布宽高比
- * @returns 弯曲后图片上的顶点数组
+ * @returns 弯曲后图像上的顶点数组
  */
 export function computeCurvePoints(
   pa: Point2D,
@@ -30,12 +30,12 @@ export function computeCurvePoints(
   if (angle > 180 || angle < -180) {
     return [];
   }
-  // 弯曲角度为0则返回原图片矩形的所有顶点数组
+  // 弯曲角度为0则返回原图像矩形的所有顶点数组
   if (angle === 0) {
     return computeOriginalPoints(pa, pb, pc, pd, xCount, yCount);
   }
   const curvePoints: Point2D[] = [];
-  // 计算并更新弯曲的图片的顶点数组
+  // 计算并更新弯曲的图像的顶点数组
   handleCurvePoints(
     pa,
     pb,
@@ -54,12 +54,12 @@ export function computeCurvePoints(
 }
 
 /**
- * 计算处弯曲后图片上的顶点并利用顶点数据进行操作
- * @param pa 原始图片矩形区域左上顶点坐标
- * @param pb 原始图片矩形区域右上顶点坐标
- * @param pc 原始图片矩形区域右下顶点坐标
- * @param pd 原始图片矩形区域左下顶点坐标
- * @param angle 图片弯曲的角度
+ * 计算处弯曲后图像上的顶点并利用顶点数据进行操作
+ * @param pa 原始图像矩形区域左上顶点坐标
+ * @param pb 原始图像矩形区域右上顶点坐标
+ * @param pc 原始图像矩形区域右下顶点坐标
+ * @param pd 原始图像矩形区域左下顶点坐标
+ * @param angle 图像弯曲的角度
  * @param pointCallback 使用顶点数据的回调
  * @param xCount 水平方向的分段数量
  * @param yCount 垂直方向的分段数量
@@ -298,10 +298,10 @@ function computeAngleParams(
 
 /**
  * 计算求圆弧上顶点需要的参数(这些参数用于在顶点着色器中基于顶点索引计算顶点新位置)
- * @param pa 原始图片矩形区域左上顶点坐标
- * @param pb 原始图片矩形区域右上顶点坐标
- * @param pc 原始图片矩形区域右下顶点坐标
- * @param pd 原始图片矩形区域左下顶点坐标
+ * @param pa 原始图像矩形区域左上顶点坐标
+ * @param pb 原始图像矩形区域右上顶点坐标
+ * @param pc 原始图像矩形区域右下顶点坐标
+ * @param pd 原始图像矩形区域左下顶点坐标
  * @param angle 弯曲的角度
  * @param xCount 水平方向分段数量
  * @param yCount 垂直方向分段数量

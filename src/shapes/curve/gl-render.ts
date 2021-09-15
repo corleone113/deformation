@@ -27,9 +27,9 @@ void main() {
 `;
 
 /**
- * 初始化绘制弯曲变形的图片的上下文并生成绘制回调
+ * 初始化绘制弯曲变形的图像的上下文并生成绘制回调
  * @param cvs 画布DOM
- * @param textPicture 文本图片资源
+ * @param textPicture 文本图像资源
  * @param textRect 文本绘制的位置、尺寸
  * @returns 返回接收x/y方向分段数量参数的回调
  */
@@ -47,15 +47,15 @@ export function initDrawingCurveText(
 }
 
 /**
- * 初始化绘制弯曲变形的图片的上下文并生成绘制回调，采用了函数柯里化以优化性能
+ * 初始化绘制弯曲变形的图像的上下文并生成绘制回调，采用了函数柯里化以优化性能
  * @param cvs 画布DOM
- * @param pa 原始图片矩形区域左上顶点坐标
- * @param pb 原始图片矩形区域右上顶点坐标
- * @param pc 原始图片矩形区域右下顶点坐标
- * @param pd 原始图片矩形区域左下顶点坐标
- * @param img 原始图片资源
- * @param flip 是否反转图片y坐标
- * @returns 返回接收x/y方向分段数量参数的回调，该回调的执行结果为一个接收弯曲角度参数的绘制弯曲后图片的回调
+ * @param pa 原始图像矩形区域左上顶点坐标
+ * @param pb 原始图像矩形区域右上顶点坐标
+ * @param pc 原始图像矩形区域右下顶点坐标
+ * @param pd 原始图像矩形区域左下顶点坐标
+ * @param img 原始图像资源
+ * @param flip 是否反转图像y坐标
+ * @returns 返回接收x/y方向分段数量参数的回调，该回调的执行结果为一个接收弯曲角度参数的绘制弯曲后图像的回调
  */
 export function initDrawingCurveImage(
   cvs: HTMLCanvasElement,
@@ -95,7 +95,7 @@ export function initDrawingCurveImage(
         return;
       }
       // console.time('draw gl1');
-      // 弯曲角度为0则返回原始图片矩形区域的所有端点
+      // 弯曲角度为0则返回原始图像矩形区域的所有端点
       if (angle === 0) {
         updateRectanglePoints(pa, pb, pd, vertices, xCount, yCount);
       } else {

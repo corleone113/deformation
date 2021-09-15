@@ -89,7 +89,7 @@ export const CurvePicture: FC = memo(() => {
   }, [staticParams, hasDot, hasLine, hasPic, angle, xCount, yCount]);
   return (
     <>
-      <p>canvas版图片变形</p>
+      <p>canvas版图像变形</p>
       <canvas width={1000} height={600} ref={cvsRef}></canvas>
       <br />
       <label htmlFor="hasDot">hasDot: </label>

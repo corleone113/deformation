@@ -73,7 +73,7 @@ export const GLCurvePicture: FC = memo(() => {
   }, [drawingFn, angle]);
   return (
     <>
-      <p>WebGL版图片变形</p>
+      <p>WebGL版图像变形</p>
       <canvas width={1000} height={600} ref={cvsRef}></canvas>
       <br />
       <label htmlFor="xCount"> xCount: </label>

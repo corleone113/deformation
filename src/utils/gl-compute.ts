@@ -1,5 +1,5 @@
 /**
- * 生成用于更新变形后图片中分段三角形顶点数据的回调
+ * 生成用于更新变形后图像中分段三角形顶点数据的回调
  * @param curveVertices 保存顶点数据的类型数组
  * @param xCount x方向分段数量
  * @param yCount y方向分段数量
@@ -126,7 +126,7 @@ function computeNDCPosition(point: Point2D, center: Point2D) {
 }
 
 /**
- * 更新变形前图片矩形区域内分段三角形上顶点数据
+ * 更新变形前图像矩形区域内分段三角形上顶点数据
  * @param pa 矩形左上角顶点
  * @param pb 矩形右上角顶点
  * @param pd 矩形左下角顶点
