@@ -27,12 +27,12 @@ interface CurveParams {
   curveDir: number;
 }
 
-/** 2D模型矩阵
+/** 2D变换矩阵
  * |a c e|
  * |b d f|
  * |0 0 1|
  */
-type TransformMatrix2D = [
+type ModelMatrix2D = [
   a: number,
   b: number,
   c: number,

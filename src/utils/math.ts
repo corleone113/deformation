@@ -6,22 +6,32 @@ export function angleToRadian(a: number) {
 export function addPoint2D(p1: Point2D, p2: Point2D) {
   return {
     x: p1.x + p2.x,
-    y: p1.y + p2.y
-  }
+    y: p1.y + p2.y,
+  };
 }
 
+/**
+ * 求解三元一次方程组，每个数组相当于增广矩阵的每一行元素
+ * @param equation1 第一个三元方程系数及已知值构成的数组
+ * @param equation2 第二个三元方程系数及已知值构成的数组
+ * @param equation3 第三个三元方程系数及已知值构成的数组
+ * @returns 解数组
+ */
 export function solveEquation3(
   equation1: number[],
   equation2: number[],
   equation3: number[]
 ) {
   const [a1, b1, c1, d1] = equation1;
-  
-  const [A1, C1, D1] = elimination(equation1, equation2)
-  const [A2, C2, D2] = elimination(equation2, equation3)
 
-  const x = ((C1 / C2) * D2 - D1) / ((C1 / C2) * A2 - A1);
-  const z = (D2 - A2 * x) / C2;
+  const eq1 = elimination(equation1, equation2);
+  const eq2 = elimination(equation2, equation3);
+  const [a2, c2, d2] = eq2;
+
+  const [a3, d3] = elimination(eq1, eq2);
+
+  const x = d3 / a3;
+  const z = (d2 - a2 * x) / c2;
   const y = (d1 - a1 * x - c1 * z) / b1;
 
   return [x, y, z];
@@ -34,17 +44,17 @@ export function solveEquation3(
  * @param equation3 第三个三元方程系数及已知值构成的数组
  * @returns 解构成的对象
  */
- export function solveEquation3_1(
+export function solveEquation3_1(
   equation1: number[],
   equation2: number[],
   equation3: number[]
 ) {
-  const [a, b, c, d] = getValidEq(equation1, equation2, equation3)
+  const [a, b, c, d] = getValidEq(equation1, equation2, equation3);
 
   // 消掉三元一次方程组中第二系数得到二元一次方程组
   const eq1 = elimination(equation1, equation2);
   const eq2 = elimination(equation2, equation3);
-  const [a1, c1, d1] = getValidEq(eq1, eq2)
+  const [a1, c1, d1] = getValidEq(eq1, eq2);
 
   // 消掉二元一次方程组中第二系数得到一元一次方程
   const [a2, d2] = elimination(eq1, eq2);
@@ -59,7 +69,6 @@ export function solveEquation3(
     z,
   };
 }
-
 
 /**
  * 求解四元一次方程组(保留此函数是为了方便理解下面的解多元一次方程组的函数代码)
@@ -165,8 +174,8 @@ export function solveEquation(...eqs: number[][]) {
 
 function getValidEq(...eqs: number[][]) {
   let validEq: number[] = [];
-  if(eqs.length === 1 && eqs[0][0] !== 0) {
-    validEq = eqs[0]
+  if (eqs.length === 1 && eqs[0][0] !== 0) {
+    validEq = eqs[0];
   } else {
     for (const eq of eqs) {
       if (eq[1] !== 0) {

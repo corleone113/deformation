@@ -134,6 +134,12 @@ export const CurvePicture: FC = memo(() => {
       <label htmlFor="angle">angle: {angle}°</label>
       <br />
       <input
+        id="angleNum"
+        type="number"
+        value={angle}
+        onInput={handleAngleChange}
+      />
+      <input
         id="angle"
         type="range"
         value={angle}

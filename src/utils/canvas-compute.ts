@@ -140,16 +140,16 @@ export function computeOriginalPoints(
   //左边点递增，右边点递增，获取每一次递增后的新的向量，继续 n 等分，从而获取所有点坐标
   for (let i = 0; i <= yCount; ++i) {
     //获得 ad 向量 n 等分后的坐标
-    let x1 = pa.x + ad_x * i;
-    let y1 = pa.y + ad_y * i;
+    const x1 = pa.x + ad_x * i;
+    const y1 = pa.y + ad_y * i;
     //获得 bc 向量 n 等分后的坐标
-    let x2 = pb.x + bc_x * i;
-    let y2 = pb.y + bc_y * i;
+    const x2 = pb.x + bc_x * i;
+    const y2 = pb.y + bc_y * i;
 
     for (let j = 0; j <= xCount; ++j) {
       // ab 向量为：[x2 - x1 , y2 - y1]，所以 n 等分后的增量为除于 n
-      let ab_x = (x2 - x1) / xCount;
-      let ab_y = (y2 - y1) / xCount;
+      const ab_x = (x2 - x1) / xCount;
+      const ab_y = (y2 - y1) / xCount;
 
       points.push({
         x: x1 + ab_x * j,
@@ -162,7 +162,7 @@ export function computeOriginalPoints(
 }
 
 /**
- * 根据变化前后的点坐标，计算矩阵
+ * 根据变化前后的点坐标，计算2D变换矩阵
  * @param p1     变化前坐标1
  * @param cp1    变化后坐标1
  * @param p2     变化前坐标2
@@ -178,7 +178,7 @@ export function computeTransformMatrix(
   cp2: Point2D,
   p3: Point2D,
   cp3: Point2D
-): TransformMatrix2D {
+): ModelMatrix2D {
   //传入x值解第一个方程 即  X = ax + cy + e 求ace
   //传入的四个参数，对应三元一次方程：ax+by+cz=d的四个参数：a、b、c、d，跟矩阵方程对比c为1
   const equation1 = [p1.x, p1.y, 1, cp1.x];

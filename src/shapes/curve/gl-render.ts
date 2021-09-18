@@ -6,25 +6,8 @@ import {
 } from '@/utils/gl-compute';
 import { handleCurvePoints } from './compute';
 import { getWebGLContext, initShaders } from '@/libs/cuon-utils';
-
-const VSHADER_SOURCE = `
-attribute vec4 a_Position;
-attribute vec2 a_TexCoord;
-varying vec2 v_TexCoord;
-void main() {
-    gl_Position = a_Position;
-    v_TexCoord = a_TexCoord;
-}
-`;
-const FSHADER_SOURCE = `
-precision highp float;
-uniform sampler2D u_Sampler;
-varying vec2 v_TexCoord;
-void main() {
-    vec4 color = texture2D(u_Sampler, v_TexCoord);
-    gl_FragColor = color;
-}
-`;
+import VSHADER_SOURCE from './vertex-coord.vs';
+import FSHADER_SOURCE from './render-texture.fs';
 
 /**
  * 初始化绘制弯曲变形的图像的上下文并生成绘制回调

@@ -159,13 +159,13 @@ function computeCurveEndPoints(
     stepY = vectorY / stepCount;
   // 计算边上顶点时的起点，是变形时固定(角度符号未变化时)的点，也是旋转围绕的点
   const startPoint = isOpposite ? p1 : p2;
-  const endPoints: Point2D[] = Array(stepCount + 1);
+  const endPoints: Point2D[] = [];
   // 计算出所有的顶点
   for (let i = 0; i <= stepCount; ++i) {
-    endPoints[i] = {
+    endPoints.push({
       x: startPoint.x + i * stepX,
       y: startPoint.y + i * stepY,
-    };
+    });
   }
   // 顶点的顺序是相反需要倒序，如果是反向弯曲则不需要倒序
   return isOpposite ? endPoints : endPoints.reverse();
@@ -180,7 +180,7 @@ function computeCurveEndPoints(
  * @param yDir +y轴方向——1表示向下，-1则相反
  * @param widthHeightRatio 画布宽高比
  * @param curveDir 圆弧弯曲的方向，1表示向上弯曲，-1则相反
- * @param offsetRad 左右端点组成的向量相对于+x轴的角度
+ * @param offsetRad 左右端点组成的向量相对于+x轴的角度取反后的值
  * @param realStep 圆心到圆弧上两个顶点的向量的夹角
  * @param from 圆心到左端点的向量相对于+y轴的角度
  * @param yIndex 当前顶点的y方向的索引
@@ -225,7 +225,7 @@ function handlePointsOnArc(
  * @param angle 圆弧角度
  * @param yDir ++y轴方向——1表示向下，-1则相反
  * @param widthHeightRatio 宽高比
- * @param offsetRad 两端点连线相对于水平方向的偏移角度
+ * @param offsetRad 两端点连线相对于水平方向的偏移角度取反后的值
  * @returns 圆弧相关参数
  */
 function computeArcParams(
@@ -285,7 +285,7 @@ function computeAngleParams(
   const { x: x2, y: y2 } = pb;
   // 圆弧弯曲的方向(中心线的方向)，1表示向上弯曲，-1则相反
   const curveDir = -sign(angle) * yDir;
-  // p1到p2的向量的旋转角度
+  // p1到p2的向量的旋转角度取反后的值——为了计算圆心位置，需要利用该角度取反后的值计算出准确的偏移量
   const offsetRad = atan2((y1 - y2) * yDir, x2 - x1) % PI;
   // 设置正确的旋转角度
   angle *= yDir;

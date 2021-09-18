@@ -47,10 +47,10 @@ export function drawCurveText(
 /**
  * 绘制弯曲后的图像
  * @param ctx canvas 2d绘制上下文
- * @param pa 图像矩形的左上顶点
- * @param pb 图像矩形的右上顶点
- * @param pc 图像矩形的右下顶点
- * @param pd 图像矩形的左下顶点
+ * @param pa 图像矩形区域的左上顶点
+ * @param pb 图像矩形区域的右上顶点
+ * @param pc 图像矩形区域的右下顶点
+ * @param pd 图像矩形区域的左下顶点
  * @param angle 弯曲的角度
  * @param xCount 水平方向分段数量
  * @param img 原始图像资源
@@ -73,68 +73,68 @@ export function drawCurveImage(
   hasPic = true,
   yCount = xCount
 ) {
-  console.time('render time')
-  // 弯曲的图像的所有顶点
+  // console.time('render time');
+  // 弯曲前的图像的所有顶点
   const originalPoints = computeOriginalPoints(pa, pb, pc, pd, xCount, yCount);
   // 弯曲后的图像的所有顶点
   const curvePoints = computeCurvePoints(pa, pb, pc, pd, angle, xCount, yCount);
 
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
   curvePoints.forEach((p, i) => {
-    //获取弯曲后的四边形的四个点
+    if (hasDot) {
+      ctx.fillStyle = 'red';
+      ctx.fillRect(p.x - 2, p.y - 2, 4, 4);
+    }
+    // 判断当前顶点和其右侧第一个顶点、下方第一个顶点、右下方第一个顶点构成图像一个四边形(梯形)区域
+    if (!canDrawClip(curvePoints, i, xCount)) {
+      return;
+    }
+    //获取弯曲后该四边形区域的四个顶点坐标
     const p1 = curvePoints[i];
     const p2 = curvePoints[i + 1];
     const p3 = curvePoints[i + xCount + 2];
     const p4 = curvePoints[i + xCount + 1];
 
-    //获取初始矩形的四个点
+    //获取弯曲前该矩形区域的四个顶点坐标
     const op1 = originalPoints[i];
     const op2 = originalPoints[i + 1];
     const op3 = originalPoints[i + xCount + 2];
     const op4 = originalPoints[i + xCount + 1];
+    // 计算绘制路径顶点数组
+    const { upPath, downPath } = computeClipShapePaths(
+      p1,
+      p2,
+      p3,
+      p4,
+      i,
+      xCount,
+      curvePoints
+    );
 
-    if (canDrawClip(curvePoints, i, xCount)) {
-      // 计算绘制路径顶点数组
-      const { upPath, downPath } = computeClipShapePaths(
-        p1,
-        p2,
-        p3,
-        p4,
-        i,
-        xCount,
-        curvePoints
-      );
-
-      //绘制三角形的上半部分
-      const upTransform = computeTransformMatrix(op1, p1, op2, p2, op4, p4);
-      renderClipImage(
-        ctx,
-        upTransform,
-        upPath,
-        originalPoints[0],
-        img,
-        hasLine,
-        hasPic
-      );
-      //绘制三角形的下半部分
-      const downTransform = computeTransformMatrix(op3, p3, op2, p2, op4, p4);
-      renderClipImage(
-        ctx,
-        downTransform,
-        downPath,
-        originalPoints[0],
-        img,
-        hasLine,
-        hasPic
-      );
-    }
-
-    if (hasDot) {
-      ctx.fillStyle = 'red';
-      ctx.fillRect(p.x - 2, p.y - 2, 4, 4);
-    }
+    // 绘制变形后四边形区域左上三角形部分
+    const upTransform = computeTransformMatrix(op1, p1, op2, p2, op4, p4);
+    renderClipImage(
+      ctx,
+      upTransform,
+      upPath,
+      originalPoints[0],
+      img,
+      hasLine,
+      hasPic
+    );
+    // 绘制变形后四边形区域右下三角形部分
+    const downTransform = computeTransformMatrix(op3, p3, op2, p2, op4, p4);
+    renderClipImage(
+      ctx,
+      downTransform,
+      downPath,
+      originalPoints[0],
+      img,
+      hasLine,
+      hasPic
+    );
   });
-  console.timeEnd('render time')
+  // console.timeEnd('render time');
 }
 
 export function drawCurveImage_Deprecated(
@@ -151,57 +151,58 @@ export function drawCurveImage_Deprecated(
   hasPic = true,
   yCount = xCount
 ) {
-  // 弯曲的图像的所有顶点
+  // console.time('render time');
+  // 弯曲前的图像的所有顶点
   const originalPoints = computeOriginalPoints(pa, pb, pc, pd, xCount, yCount);
   // 弯曲后的图像的所有顶点
   const curvePoints = computeCurvePoints(pa, pb, pc, pd, angle, xCount, yCount);
 
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-  // console.time('canvas draw')
   curvePoints.forEach((p, i) => {
-    //获取弯曲后的四边形的四个点
+    if (hasDot) {
+      ctx.fillStyle = 'red';
+      ctx.fillRect(p.x - 2, p.y - 2, 4, 4);
+    }
+    // 判断当前顶点和其右侧第一个顶点、下方第一个顶点、右下方第一个顶点构成图像一个四边形(梯形)区域
+    if (!canDrawClip(curvePoints, i, xCount)) {
+      return;
+    }
+    //获取弯曲后该四边形区域的四个顶点坐标
     const p1 = curvePoints[i];
     const p2 = curvePoints[i + 1];
     const p3 = curvePoints[i + xCount + 2];
     const p4 = curvePoints[i + xCount + 1];
 
-    //获取初始矩形的四个点
+    //获取弯曲前该矩形区域的四个顶点坐标
     const op1 = originalPoints[i];
     const op2 = originalPoints[i + 1];
     const op3 = originalPoints[i + xCount + 2];
     const op4 = originalPoints[i + xCount + 1];
 
-    if (canDrawClip(curvePoints, i, xCount)) {
-      //绘制三角形的上半部分
-      const upTransform = computeTransformMatrix(op1, p1, op2, p2, op4, p4);
-      renderClipImage(
-        ctx,
-        upTransform,
-        [p1, p2, p4],
-        originalPoints[0],
-        img,
-        hasLine,
-        hasPic
-      );
-      //绘制三角形的下半部分
-      const downTransform = computeTransformMatrix(op3, p3, op2, p2, op4, p4);
-      renderClipImage(
-        ctx,
-        downTransform,
-        [p3, p2, p4],
-        originalPoints[0],
-        img,
-        hasLine,
-        hasPic
-      );
-    }
-
-    if (hasDot) {
-      ctx.fillStyle = 'red';
-      ctx.fillRect(p.x - 2, p.y - 2, 4, 4);
-    }
+    // 绘制变形后四边形区域左上三角形部分
+    const upTransform = computeTransformMatrix(op1, p1, op2, p2, op4, p4);
+    renderClipImage(
+      ctx,
+      upTransform,
+      [p1, p2, p4],
+      originalPoints[0],
+      img,
+      hasLine,
+      hasPic
+    );
+    // 绘制变形后四边形区域右下三角形部分
+    const downTransform = computeTransformMatrix(op3, p3, op2, p2, op4, p4);
+    renderClipImage(
+      ctx,
+      downTransform,
+      [p3, p2, p4],
+      originalPoints[0],
+      img,
+      hasLine,
+      hasPic
+    );
   });
-  // console.timeEnd('canvas draw')
+  // console.timeEnd('render time');
 }
 
 /**
@@ -216,7 +217,7 @@ export function drawCurveImage_Deprecated(
  */
 function renderClipImage(
   ctx: CanvasRenderingContext2D,
-  matrix: TransformMatrix2D,
+  matrix: ModelMatrix2D,
   points: Point2D[],
   startPoint: Point2D,
   img: HTMLImageElement | ImageBitmap,
