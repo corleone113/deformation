@@ -94,7 +94,7 @@ export function initDrawingCurveImage(
       if (angle > 180 || angle < -180) {
         return;
       }
-      console.time('draw gl shader');
+      // console.time('draw gl shader');
       // console.time('compute params');
       const { upRadius, radiusDelta, center, fromAngle, angleStep, curveDir } =
         computeCurveParams(
@@ -121,7 +121,7 @@ export function initDrawingCurveImage(
         angle === 0
       );
       // console.timeEnd('drawing');
-      console.timeEnd('draw gl shader');
+      // console.timeEnd('draw gl shader');
     };
   };
 }
