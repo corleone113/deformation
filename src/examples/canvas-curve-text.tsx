@@ -15,6 +15,12 @@ type StaticDrawingParams = [
   TextRect,
   Promise<ImageBitmap>
 ];
+
+const { max, min } = Math;
+const MIN_COUNT=1, MAX_COUNT=100;
+function genValidCount(x: number) {
+  return max(MIN_COUNT, min(x, MAX_COUNT))
+}
 export const CurveText: FC = memo(() => {
   const [xCount, setXCount] = useState(50);
   const [yCount, setYCount] = useState(50);
@@ -27,10 +33,10 @@ export const CurveText: FC = memo(() => {
     setAngle(+(ev.target as HTMLInputElement).value);
   }, []);
   const handleXCountChange = useCallback<FormEventHandler>((ev) => {
-    setXCount(+(ev.target as HTMLInputElement).value);
+    setXCount(genValidCount(+(ev.target as HTMLInputElement).value));
   }, []);
   const handleYCountChange = useCallback<FormEventHandler>((ev) => {
-    setYCount(+(ev.target as HTMLInputElement).value);
+    setYCount(genValidCount(+(ev.target as HTMLInputElement).value));
   }, []);
 
   useEffect(() => {
@@ -59,7 +65,7 @@ export const CurveText: FC = memo(() => {
   }, [staticParams, angle, xCount, yCount]);
   return (
     <>
-      <p>canvas版文字变形</p>
+      <p>canvas版文字变形(分段限制:1-100)</p>
       <canvas width={1000} height={600} ref={cvsRef}></canvas>
       <br />
       <label htmlFor="xCount">xCount: </label>
@@ -67,6 +73,8 @@ export const CurveText: FC = memo(() => {
         id="xCount"
         type="number"
         value={xCount}
+        min={MIN_COUNT}
+        max={MAX_COUNT}
         onInput={handleXCountChange}
       />
       <label htmlFor="yCount">yCount: </label>
@@ -74,6 +82,8 @@ export const CurveText: FC = memo(() => {
         id="yCount"
         type="number"
         value={yCount}
+        min={MIN_COUNT}
+        max={MAX_COUNT}
         onInput={handleYCountChange}
       />
       <br />

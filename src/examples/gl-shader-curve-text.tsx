@@ -16,6 +16,12 @@ type StaticDrawingParams = [
   textPicture: ImageBitmap,
   textRect: TextRect,
 ];
+
+const { max, min } = Math;
+const MIN_COUNT=1, MAX_COUNT=5000;
+function genValidCount(x: number) {
+  return max(MIN_COUNT, min(x, MAX_COUNT))
+}
 export const GLShaderCurveText: FC = memo(() => {
   const [xCount, setXCount] = useState(500);
   const [yCount, setYCount] = useState(500);
@@ -41,10 +47,10 @@ export const GLShaderCurveText: FC = memo(() => {
     setAngle(+(ev.target as HTMLInputElement).value);
   }, []);
   const handleXCountChange = useCallback<FormEventHandler>((ev) => {
-    setXCount(+(ev.target as HTMLInputElement).value);
+    setXCount(genValidCount(+(ev.target as HTMLInputElement).value));
   }, []);
   const handleYCountChange = useCallback<FormEventHandler>((ev) => {
-    setYCount(+(ev.target as HTMLInputElement).value);
+    setYCount(genValidCount(+(ev.target as HTMLInputElement).value));
   }, []);
 
   useEffect(() => {
@@ -74,7 +80,7 @@ export const GLShaderCurveText: FC = memo(() => {
   }, [drawingFn, angle]);
   return (
     <>
-      <p>WebGL版文字变形(改进版)</p>
+      <p>WebGL版文字变形(改进版)(分段限制:1-5000)</p>
       <canvas width={1000} height={600} ref={cvsRef}></canvas>
       <br />
       <label htmlFor="xCount"> xCount: </label>
@@ -82,6 +88,8 @@ export const GLShaderCurveText: FC = memo(() => {
         id="xCount"
         type="number"
         value={xCount}
+        min={MIN_COUNT}
+        max={MAX_COUNT}
         onInput={handleXCountChange}
       />
       <label htmlFor="yCount"> yCount: </label>
@@ -89,6 +97,8 @@ export const GLShaderCurveText: FC = memo(() => {
         id="yCount"
         type="number"
         value={yCount}
+        min={MIN_COUNT}
+        max={MAX_COUNT}
         onInput={handleYCountChange}
       />
       <br />

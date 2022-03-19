@@ -186,7 +186,7 @@ if (!window.requestAnimationFrame) {
   window.requestAnimationFrame = (function () {
     return (
       window.requestAnimationFrame ||
-      window.webkitRequestAnimationFrame ||
+      (window as any).webkitRequestAnimationFrame ||
       (window as any).mozRequestAnimationFrame ||
       (window as any).oRequestAnimationFrame ||
       (window as any).msRequestAnimationFrame ||
@@ -207,8 +207,8 @@ if (!window.requestAnimationFrame) {
  * @param {number}  Animation frame request. */
 if (!window.cancelAnimationFrame) {
   window.cancelAnimationFrame =
-  (window as any).cancelRequestAnimationFrame ||
-    window.webkitCancelAnimationFrame ||
+    (window as any).cancelRequestAnimationFrame ||
+    (window as any).webkitCancelAnimationFrame ||
     (window as any).webkitCancelRequestAnimationFrame ||
     (window as any).mozCancelAnimationFrame ||
     (window as any).mozCancelRequestAnimationFrame ||

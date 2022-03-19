@@ -8,6 +8,7 @@ import {
   memo,
   FormEventHandler,
 } from 'react';
+import picURL from '@assets/pic.jpg'
 
 type StaticDrawingParams = [
   CanvasRenderingContext2D,
@@ -17,6 +18,12 @@ type StaticDrawingParams = [
   Point2D,
   HTMLImageElement
 ];
+
+const { max, min } = Math;
+const MIN_COUNT=1, MAX_COUNT=100;
+function genValidCount(x: number) {
+  return max(MIN_COUNT, min(x, MAX_COUNT))
+}
 export const CurvePicture: FC = memo(() => {
   const [hasDot, setHasDot] = useState(false);
   const [hasLine, setHasLine] = useState(false);
@@ -41,10 +48,10 @@ export const CurvePicture: FC = memo(() => {
     setAngle(+(ev.target as HTMLInputElement).value);
   }, []);
   const handleXCountChange = useCallback<FormEventHandler>((ev) => {
-    setXCount(+(ev.target as HTMLInputElement).value);
+    setXCount(genValidCount(+(ev.target as HTMLInputElement).value));
   }, []);
   const handleYCountChange = useCallback<FormEventHandler>((ev) => {
-    setYCount(+(ev.target as HTMLInputElement).value);
+    setYCount(genValidCount(+(ev.target as HTMLInputElement).value));
   }, []);
 
   useEffect(() => {
@@ -52,7 +59,7 @@ export const CurvePicture: FC = memo(() => {
       '2d'
     ) as CanvasRenderingContext2D;
     const img = new Image();
-    img.src = '/assets/pic.jpg';
+    img.src = picURL;
     img.onload = () => {
       const { width, height } = img;
       const imgWidth = 350;
@@ -89,7 +96,7 @@ export const CurvePicture: FC = memo(() => {
   }, [staticParams, hasDot, hasLine, hasPic, angle, xCount, yCount]);
   return (
     <>
-      <p>canvas版图像变形</p>
+      <p>canvas版图像变形(分段限制:1-100)</p>
       <canvas width={1000} height={600} ref={cvsRef}></canvas>
       <br />
       <label htmlFor="hasDot">hasDot: </label>
@@ -121,6 +128,8 @@ export const CurvePicture: FC = memo(() => {
         id="xCount"
         type="number"
         value={xCount}
+        min={MIN_COUNT}
+        max={MAX_COUNT}
         onInput={handleXCountChange}
       />
       <label htmlFor="yCount">yCount: </label>
@@ -128,6 +137,8 @@ export const CurvePicture: FC = memo(() => {
         id="yCount"
         type="number"
         value={yCount}
+        min={MIN_COUNT}
+        max={MAX_COUNT}
         onInput={handleYCountChange}
       />
       <br />

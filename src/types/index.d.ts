@@ -91,3 +91,7 @@ declare module '*.vs' {
 declare module '*.fs' {
   export default source
 }
+
+declare module '*.jpg' {
+  export default source
+}

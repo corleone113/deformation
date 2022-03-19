@@ -1,5 +1,11 @@
 import { initDrawingCurveImage } from '@/shapes/curve/gl-render';
+import picURL from '@assets/pic.jpg'
 
+const { max, min } = Math;
+const MIN_COUNT=1, MAX_COUNT=1000;
+function genValidCount(x: number) {
+  return max(MIN_COUNT, min(x, MAX_COUNT))
+}
 let xCount = '200',
   yCount = '200',
   angle = '150',
@@ -14,8 +20,10 @@ labelXCount.textContent = ' xCount:';
 const xCountText = document.createElement('input');
 xCountText.type = 'number';
 xCountText.value = xCount;
+xCountText.min = MIN_COUNT+''
+xCountText.max = MAX_COUNT+''
 xCountText.addEventListener('input', (ev) => {
-  xCount = (ev.target as HTMLInputElement).value;
+  xCount = genValidCount(+(ev.target as HTMLInputElement).value)+'';
   requestAnimationFrame(() => {
     drawingFn = genDrawing(+xCount, +yCount);
     drawingFn(+angle);
@@ -27,8 +35,10 @@ labelYCount.textContent = ' yCount:';
 const yCountText = document.createElement('input');
 yCountText.type = 'number';
 yCountText.value = yCount;
+yCountText.min = MIN_COUNT+''
+yCountText.max = MAX_COUNT+''
 yCountText.addEventListener('input', (ev) => {
-  yCount = (ev.target as HTMLInputElement).value;
+  yCount = genValidCount(+(ev.target as HTMLInputElement).value)+'';
   requestAnimationFrame(() => {
     drawingFn = genDrawing(+xCount, +yCount);
     drawingFn(+angle);
@@ -68,7 +78,7 @@ document.body.append(
 const img = new Image();
 let genDrawing: (xCount: number, yCount?: number) => (angle: number) => void;
 let drawingFn: (angle: number) => void;
-img.src = '/assets/pic.jpg';
+img.src = picURL;
 img.onload = () => {
   const { width, height } = img;
   newWidth = 350;
