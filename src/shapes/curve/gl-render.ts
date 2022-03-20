@@ -10,7 +10,7 @@ import VSHADER_SOURCE from './vertex-coord.vs';
 import FSHADER_SOURCE from './render-texture.fs';
 
 /**
- * 初始化绘制弯曲变形的图像的上下文并生成绘制回调
+ * 初始化绘制弯曲弯曲变形的图像的上下文并生成绘制回调
  * @param cvs 画布DOM
  * @param textPicture 文本图像资源
  * @param textRect 文本绘制的位置、尺寸
@@ -30,7 +30,7 @@ export function initDrawingCurveText(
 }
 
 /**
- * 初始化绘制弯曲变形的图像的上下文并生成绘制回调，采用了函数柯里化以优化性能
+ * 初始化绘制弯曲弯曲变形的图像的上下文并生成绘制回调，采用了函数柯里化以优化性能
  * @param cvs 画布DOM
  * @param pa 原始图像矩形区域左上顶点坐标
  * @param pb 原始图像矩形区域右上顶点坐标

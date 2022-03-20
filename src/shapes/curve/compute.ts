@@ -157,7 +157,7 @@ function computeCurveEndPoints(
   // 变化的步长向量的x、y
   const stepX = vectorX / stepCount,
     stepY = vectorY / stepCount;
-  // 计算边上顶点时的起点，是变形时固定(角度符号未变化时)的点，也是旋转围绕的点
+  // 计算边上顶点时的起点，是弯曲变形时固定(角度符号未变化时)的点，也是旋转围绕的点
   const startPoint = isOpposite ? p1 : p2;
   const endPoints: Point2D[] = [];
   // 计算出所有的顶点

@@ -80,7 +80,7 @@ export const GLShaderCurveText: FC = memo(() => {
   }, [drawingFn, angle]);
   return (
     <>
-      <p>WebGL版文字变形(改进版)(分段限制:1-5000)</p>
+      <p>WebGL版文字弯曲变形(改进版)(分段限制:1-5000)</p>
       <canvas width={1000} height={600} ref={cvsRef}></canvas>
       <br />
       <label htmlFor="xCount"> xCount: </label>

@@ -111,7 +111,7 @@ export function drawCurveImage(
       curvePoints
     );
 
-    // 绘制变形后四边形区域左上三角形部分
+    // 绘制弯曲变形后四边形区域左上三角形部分
     const upTransform = computeTransformMatrix(op1, p1, op2, p2, op4, p4);
     renderClipImage(
       ctx,
@@ -122,7 +122,7 @@ export function drawCurveImage(
       hasLine,
       hasPic
     );
-    // 绘制变形后四边形区域右下三角形部分
+    // 绘制弯曲变形后四边形区域右下三角形部分
     const downTransform = computeTransformMatrix(op3, p3, op2, p2, op4, p4);
     renderClipImage(
       ctx,
@@ -179,7 +179,7 @@ export function drawCurveImage_Deprecated(
     const op3 = originalPoints[i + xCount + 2];
     const op4 = originalPoints[i + xCount + 1];
 
-    // 绘制变形后四边形区域左上三角形部分
+    // 绘制弯曲变形后四边形区域左上三角形部分
     const upTransform = computeTransformMatrix(op1, p1, op2, p2, op4, p4);
     renderClipImage(
       ctx,
@@ -190,7 +190,7 @@ export function drawCurveImage_Deprecated(
       hasLine,
       hasPic
     );
-    // 绘制变形后四边形区域右下三角形部分
+    // 绘制弯曲变形后四边形区域右下三角形部分
     const downTransform = computeTransformMatrix(op3, p3, op2, p2, op4, p4);
     renderClipImage(
       ctx,
@@ -242,7 +242,7 @@ function renderClipImage(
   ctx.clip();
 
   if (hasPic) {
-    //变形
+    //弯曲变形
     ctx.transform(...matrix);
     //绘制图像
     ctx.drawImage(img, startPoint.x, startPoint.y, img.width, img.height);

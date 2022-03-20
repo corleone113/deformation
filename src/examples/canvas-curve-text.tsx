@@ -65,7 +65,7 @@ export const CurveText: FC = memo(() => {
   }, [staticParams, angle, xCount, yCount]);
   return (
     <>
-      <p>canvas版文字变形(分段限制:1-100)</p>
+      <p>canvas版文字弯曲变形(分段限制:1-100)</p>
       <canvas width={1000} height={600} ref={cvsRef}></canvas>
       <br />
       <label htmlFor="xCount">xCount: </label>

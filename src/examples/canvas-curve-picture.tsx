@@ -96,7 +96,7 @@ export const CurvePicture: FC = memo(() => {
   }, [staticParams, hasDot, hasLine, hasPic, angle, xCount, yCount]);
   return (
     <>
-      <p>canvas版图像变形(分段限制:1-100)</p>
+      <p>canvas版图像弯曲变形(分段限制:1-100)</p>
       <canvas width={1000} height={600} ref={cvsRef}></canvas>
       <br />
       <label htmlFor="hasDot">hasDot: </label>
