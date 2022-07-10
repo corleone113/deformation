@@ -87,7 +87,6 @@ export function handleCurvePoints(
     angle,
     xCount,
     yDir,
-    widthHeightRatio
   );
   // 扇形(弯曲后的形状为扇形)左边上的所有顶点
   const leftEndPoints = computeCurveEndPoints(
@@ -95,8 +94,7 @@ export function handleCurvePoints(
     pd,
     angle,
     yCount,
-    -yDir as CoordDirection,
-    widthHeightRatio
+    -yDir as CoordDirection
   );
   // 扇形右边上的所有顶点
   const rightEndPoints = computeCurveEndPoints(
@@ -104,8 +102,7 @@ export function handleCurvePoints(
     pc,
     angle,
     yCount,
-    yDir as CoordDirection,
-    widthHeightRatio
+    yDir as CoordDirection
   );
   for (let i = 0; i < leftEndPoints.length; ++i) {
     // 计算每对顶点对应的圆弧上的顶点，并传入到回调中进行处理
@@ -133,7 +130,6 @@ export function handleCurvePoints(
  * @param angle 弯曲角度
  * @param stepCount 分段数量
  * @param yDir +y轴方向——1表示向下，-1则相反
- * @param widthHeightRatio 画布的宽高比
  * @returns 该边弯曲(旋转)后的顶点数组
  */
 function computeCurveEndPoints(
@@ -141,8 +137,7 @@ function computeCurveEndPoints(
   p2: Point2D,
   angle: number,
   stepCount: number,
-  yDir: CoordDirection,
-  widthHeightRatio: number
+  yDir: CoordDirection
 ) {
   // 是否反向弯曲
   const isOpposite = sign(angle) === -1;
@@ -151,8 +146,7 @@ function computeCurveEndPoints(
     p1,
     p2,
     angle,
-    yDir,
-    widthHeightRatio
+    yDir
   );
   // 变化的步长向量的x、y
   const stepX = vectorX / stepCount,
@@ -204,14 +198,14 @@ function handlePointsOnArc(
   const {
     center: { x: centerX, y: centerY },
     radius,
-  } = computeArcParams(p1, p2, angle, yDir, widthHeightRatio, offsetRad);
+  } = computeArcParams(p1, p2, angle, yDir, offsetRad);
 
   // 求圆弧上的顶点，并传入回调中执行
   for (let i = from, count = 0; count <= stepCount; i += realStep, ++count) {
     pointCallback(
-      centerX + radius * sin(i),
+      (centerX + radius * sin(i)) / widthHeightRatio,
       // 最后的y值需要乘以宽高比(之前除以宽高比以保证不受画布宽高不相等的影响，这里要还原)
-      (centerY + radius * cos(i) * curveDir) * widthHeightRatio,
+      (centerY + radius * cos(i) * curveDir),
       count,
       yIndex
     );
@@ -224,7 +218,6 @@ function handlePointsOnArc(
  * @param p2 圆弧的另一个端点
  * @param angle 圆弧角度
  * @param yDir ++y轴方向——1表示向下，-1则相反
- * @param widthHeightRatio 宽高比
  * @param offsetRad 两端点连线相对于水平方向的偏移角度取反后的值
  * @returns 圆弧相关参数
  */
@@ -233,16 +226,10 @@ function computeArcParams(
   p2: Point2D,
   angle: number,
   yDir: CoordDirection,
-  widthHeightRatio: number,
   offsetRad: number
 ): ArcParams {
-  const pa = { ...p1 };
-  const pb = { ...p2 };
-  // 若传入的pa、pb已经转换为NDC下的坐标，则需要除以宽高比保证计算的角度等信息不会存在误差(画布宽高非1:1则转化到NDC下的坐标相当于被水平/垂直缩放过)
-  pa.y /= widthHeightRatio;
-  pb.y /= widthHeightRatio;
-  const { x: x1, y: y1 } = pa;
-  const { x: x2, y: y2 } = pb;
+  const { x: x1, y: y1 } = p1;
+  const { x: x2, y: y2 } = p2;
   // 两端点和圆心构成的三角形中圆心点的对边的一半
   const sinLen = hypot(x2 - x1, y2 - y1) / 2;
   // 两端点和圆心构成的三角形中圆心对边上的中线, 该中线正好将三角形分为两个全等三角形
@@ -251,8 +238,8 @@ function computeArcParams(
   const radius = hypot(sinLen, cosLen);
   return {
     center: {
-      x: (x2 + x1) / 2 + cosLen * sin(offsetRad),
-      y: (y2 + y1) / 2 + cosLen * cos(offsetRad) * yDir,
+      x: ((x2 + x1) / 2 + cosLen * sin(offsetRad)),
+      y: ((y2 + y1) / 2 + cosLen * cos(offsetRad) * yDir),
     },
     radius,
   };
@@ -265,7 +252,6 @@ function computeArcParams(
  * @param angle 弯曲的角度
  * @param stepCount 分段数量
  * @param yDir +y轴方向——1表示向下，-1则相反
- * @param widthHeightRatio 画布宽高比
  * @returns 返回角度相关的参数
  */
 function computeAngleParams(
@@ -273,16 +259,10 @@ function computeAngleParams(
   p2: Point2D,
   angle: number,
   stepCount: number,
-  yDir: CoordDirection,
-  widthHeightRatio: number
+  yDir: CoordDirection
 ) {
-  const pa = { ...p1 };
-  const pb = { ...p2 };
-  // 获取等比例下y方向分量——主要是应对webgl下的场景，webgl下需要将传入的顶点的x/y值映射到-1到1的范围(相对于画布的宽高)
-  pa.y /= widthHeightRatio;
-  pb.y /= widthHeightRatio;
-  const { x: x1, y: y1 } = pa;
-  const { x: x2, y: y2 } = pb;
+  const { x: x1, y: y1 } = p1;
+  const { x: x2, y: y2 } = p2;
   // 圆弧弯曲的方向(中心线的方向)，1表示向上弯曲，-1则相反
   const curveDir = -sign(angle) * yDir;
   // p1到p2的向量的旋转角度取反后的值——为了计算圆心位置，需要利用该角度取反后的值计算出准确的偏移量
@@ -306,7 +286,6 @@ function computeAngleParams(
  * @param xCount 水平方向分段数量
  * @param yCount 垂直方向分段数量
  * @param yDir ++y轴方向——1表示向下，-1则相反
- * @param widthHeightRatio 宽高比
  * @returns 求圆弧上顶点所需的参数
  */
 export function computeCurveParams(
@@ -317,8 +296,7 @@ export function computeCurveParams(
   angle: number,
   xCount: number,
   yCount: number,
-  yDir: CoordDirection,
-  widthHeightRatio: number
+  yDir: CoordDirection
 ): CurveParams {
   angle = angleToRadian(angle);
   const rotateDir = sign(angle);
@@ -329,11 +307,10 @@ export function computeCurveParams(
     pa,
     pd,
     angle,
-    -yDir as CoordDirection,
-    widthHeightRatio
+    -yDir as CoordDirection
   );
   // pb和pc组成向量旋转后的向量
-  const vectorBC = computeRotatedVector(pb, pc, angle, yDir, widthHeightRatio);
+  const vectorBC = computeRotatedVector(pb, pc, angle, yDir);
 
   // 最上方圆弧左端点
   const leftEndPoint = isOpposite ? pa : addPoint2D(pd, vectorAD);
@@ -351,7 +328,6 @@ export function computeCurveParams(
     angle,
     xCount,
     yDir,
-    widthHeightRatio
   );
   // 最上方圆弧的半径、中心点
   const { radius: upRadius, center } = computeArcParams(
@@ -359,12 +335,10 @@ export function computeCurveParams(
     rightEndPoint,
     angle,
     yDir,
-    widthHeightRatio,
     offsetRad
   );
   // 半径变化步长
-  const radiusDelta =
-    (rotateDir * hypot(vectorAD.x, vectorAD.y / widthHeightRatio)) / yCount;
+  const radiusDelta = rotateDir * hypot(vectorAD.x, vectorAD.y) / yCount;
   return {
     upRadius,
     radiusDelta,
@@ -381,7 +355,6 @@ export function computeCurveParams(
  * @param p2 第二个点
  * @param angle 旋转角度
  * @param yDir +y轴方向——1表示向下，-1则相反
- * @param widthHeightRatio 宽高比
  * @returns 旋转后的向量
  */
 function computeRotatedVector(
@@ -389,7 +362,6 @@ function computeRotatedVector(
   p2: Point2D,
   angle: number,
   yDir: CoordDirection,
-  widthHeightRatio: number
 ): Point2D {
   const { x: x1, y: y1 } = p1;
   const { x: x2, y: y2 } = p2;
@@ -403,9 +375,9 @@ function computeRotatedVector(
   const vectorY = isOpposite ? y2 - y1 : y1 - y2;
   // 旋转后的向量x分量
   const x =
-    cos(rotateRad) * vectorX - (sin(rotateRad) * vectorY) / widthHeightRatio;
+    cos(rotateRad) * vectorX - sin(rotateRad) * vectorY;
   // 旋转后的向量y分量
   const y =
-    sin(rotateRad) * vectorX * widthHeightRatio + cos(rotateRad) * vectorY;
+    sin(rotateRad) * vectorX + cos(rotateRad) * vectorY;
   return { x, y };
 }

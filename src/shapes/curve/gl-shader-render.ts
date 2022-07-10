@@ -55,6 +55,11 @@ export function initDrawingCurveImage(
     tr = { x: 1, y: 1 },
     bl = { x: 0, y: 0 };
   const widthHeightRatio = cvs.width / cvs.height;
+  // 每个顶点的y坐标相当于放大了widthHeightRatio倍，所以先缩小widthHeightRatio倍，由此避免计算相关参数时受缩放的影响，在绘制之前再还原。
+  pa.y /= widthHeightRatio;
+  pb.y /= widthHeightRatio;
+  pc.y /= widthHeightRatio;
+  pd.y /= widthHeightRatio;
   // 初始化gl绘制上下文,生成一个接收顶点数据和纹理坐标数据的绘制回调
   const renderGenerator = initTextureRendererGenerator(cvs, img);
   if (!renderGenerator) {
@@ -106,7 +111,6 @@ export function initDrawingCurveImage(
           xCount,
           yCount,
           -1,
-          widthHeightRatio
         );
       // console.timeEnd('compute params');
       // console.time('drawing');

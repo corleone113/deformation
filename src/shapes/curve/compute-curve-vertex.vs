@@ -12,7 +12,9 @@ attribute vec2 a_TexCoord;
 varying vec2 v_TexCoord;
 void main() {
   if (u_UsePos) {
-    gl_Position = a_Position;
+    vec4 pos = a_Position;
+    pos.y *= u_WidthHeightRatio;
+    gl_Position = pos;
   } else {
     float radius = u_UpRadius - a_PosIndices.y * u_RadiusDelta;
     float angle = u_FromAngle + a_PosIndices.x * u_AngleStep;

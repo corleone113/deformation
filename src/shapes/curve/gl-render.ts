@@ -61,6 +61,10 @@ export function initDrawingCurveImage(
     tr = { x: 1, y: 1 },
     bl = { x: 0, y: 0 };
   const widthHeightRatio = cvs.width / cvs.height;
+  pa.x *= widthHeightRatio;
+  pb.x *= widthHeightRatio;
+  pc.x *= widthHeightRatio;
+  pd.x *= widthHeightRatio;
   // 初始化gl绘制上下文,生成一个接收顶点数据和纹理坐标数据的绘制回调
   const renderGenerator = initTextureRenderer(cvs, img);
   return (xCount: number, yCount = xCount) => {
